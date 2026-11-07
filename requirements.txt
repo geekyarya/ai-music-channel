@@ -1,0 +1,10 @@
+numpy>=1.26
+scipy>=1.11
+pillow>=10.3
+pyyaml>=6.0
+requests>=2.31
+edge-tts>=7.0
+gradio_client>=2.0,<3
+faster-whisper>=1.1
+google-api-python-client>=2.130
+google-auth>=2.29

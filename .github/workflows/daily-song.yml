@@ -1,0 +1,97 @@
+name: Daily AI Song
+
+on:
+  schedule:
+    - cron: "37 14 * * *"   # every day at 14:37 UTC — change to suit your audience
+  workflow_dispatch:
+    inputs:
+      genre:
+        description: "Force a genre (blank = rotate automatically)"
+        required: false
+        default: ""
+      backend:
+        description: "Force a music engine"
+        type: choice
+        options: ["auto", "ace_step", "local"]
+        default: "auto"
+      upload:
+        description: "Upload to YouTube"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write   # commit data/history.json
+  models: read      # free GitHub Models LLM via GITHUB_TOKEN
+
+concurrency:
+  group: daily-song
+  cancel-in-progress: false
+
+jobs:
+  make-and-post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: System packages
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q ffmpeg espeak-ng fonts-dejavu-core
+
+      - name: Fonts (free Google Fonts, falls back to DejaVu if unavailable)
+        continue-on-error: true
+        run: |
+          mkdir -p assets/fonts
+          curl -fsSL -o assets/fonts/Anton-Regular.ttf https://github.com/google/fonts/raw/main/ofl/anton/Anton-Regular.ttf
+          curl -fsSL -o "assets/fonts/Inter.ttf" "https://github.com/google/fonts/raw/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf"
+
+      - name: Python deps
+        run: pip install -r requirements.txt
+
+      - name: Cache Whisper model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: whisper-small-en-v1
+
+      - name: Make today's song + video (+ upload)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          IN_GENRE: ${{ inputs.genre }}
+          IN_BACKEND: ${{ inputs.backend }}
+          IN_UPLOAD: ${{ inputs.upload }}
+        run: |
+          ARGS=()
+          [ -n "$IN_GENRE" ] && ARGS+=(--genre "$IN_GENRE")
+          [ -n "$IN_BACKEND" ] && [ "$IN_BACKEND" != "auto" ] && ARGS+=(--backend "$IN_BACKEND")
+          [ "$IN_UPLOAD" = "false" ] && ARGS+=(--no-upload)
+          python src/main.py "${ARGS[@]}"
+
+      - name: Keep the video as a build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: song-${{ github.run_number }}
+          path: out/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Commit history (also keeps the schedule alive — GitHub pauses crons on idle repos)
+        run: |
+          git config user.name "ai-music-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/history.json
+          git diff --cached --quiet || git commit -m "🎵 $(jq -r '.[-1].title' data/history.json) [skip ci]"
+          git push

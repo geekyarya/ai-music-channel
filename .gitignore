@@ -1,0 +1,6 @@
+out/
+__pycache__/
+*.pyc
+client_secret*.json
+assets/fonts/*.ttf
+sample-preview.mp4
