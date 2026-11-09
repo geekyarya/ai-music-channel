@@ -10,7 +10,7 @@ Every day, GitHub Actions:
 
 | Piece | Free service | Cost |
 |---|---|---|
-| Lyrics / ideas | GitHub Models (built-in `GITHUB_TOKEN`), with Gemini or Groq as optional fallbacks | $0 |
+| Lyrics / ideas | Hugging Face router (same `HF_TOKEN`, free monthly credits), with GitHub Models, Gemini or Groq as fallbacks | $0 |
 | Singing + music | ACE-Step on Hugging Face ZeroGPU (free account) | $0 |
 | Fallback music | Beat synthesized on the runner + Edge neural TTS rap (espeak-ng as backup) | $0 |
 | Lyric timing | faster-whisper on CPU | $0 |
@@ -55,7 +55,7 @@ Push this folder to a **public** GitHub repo. Public repos get unlimited Actions
 > Approval usually takes a few days to a few weeks. Until then, the videos upload as private, and you can still review them in YouTube Studio.
 
 ### 4. (Optional) extra LLM fallbacks
-`GEMINI_API_KEY` (Google AI Studio free tier) and/or `GROQ_API_KEY` (Groq free tier). Not required, because GitHub Models works with zero setup.
+`GEMINI_API_KEY` (Google AI Studio free tier) and/or `GROQ_API_KEY` (Groq free tier). Not required, because the Hugging Face token already covers lyrics.
 
 ### 5. Test it
 Go to **Actions → Daily AI Song → Run workflow**, untick *Upload*, and run it.

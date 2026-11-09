@@ -34,7 +34,7 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
                 audio_duration=float(cfg["song"]["duration_seconds"]),
                 prompt=prompt,
                 lyrics=lyrics_text(spec),
-                infer_step=float(a.get("infer_steps", 60)),
+                infer_step=int(a.get("infer_steps", 60)),
                 guidance_scale=float(a.get("guidance_scale", 15.0)),
                 scheduler_type="euler",
                 cfg_type="apg",
@@ -63,5 +63,7 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
             shutil.rmtree(os.path.dirname(src), ignore_errors=True)
             return {"audio": out, "timings": None, "engine": f"ACE-Step ({space})"}
         except Exception as e:  # noqa: BLE001
-            errors.append(f"{space}: {e}")
+            import traceback
+            traceback.print_exc()
+            errors.append(f"{space}: {type(e).__name__}: {e!r}")
     raise RuntimeError("ACE-Step failed: " + " | ".join(errors))

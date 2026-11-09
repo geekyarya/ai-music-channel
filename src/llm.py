@@ -9,6 +9,9 @@ import time
 import requests
 
 ENDPOINTS = {
+    # Hugging Face Inference Providers router: OpenAI-compatible, reuses the HF_TOKEN
+    # the singing step already needs (free monthly credits cover ~1 song/day easily).
+    "hf": ("https://router.huggingface.co/v1/chat/completions", "HF_TOKEN"),
     # GitHub Models: free, authenticated by the GITHUB_TOKEN every Actions run gets
     # (the workflow needs `permissions: models: read`).
     "github": ("https://models.github.ai/inference/chat/completions", "GITHUB_TOKEN"),
@@ -44,7 +47,7 @@ def chat_json(providers: list[dict], system: str, user: str, temperature: float 
                 body["response_format"] = {"type": "json_object"}
             r = None
             try:
-                r = requests.post(url, headers=headers, json=body, timeout=120)
+                r = requests.post(url, headers=headers, json=body, timeout=120, allow_redirects=False)
                 if r.status_code >= 400:
                     raise LLMError(f"HTTP {r.status_code}: {r.text[:300]!r}")
                 text = r.json()["choices"][0]["message"]["content"] or ""
@@ -53,7 +56,8 @@ def chat_json(providers: list[dict], system: str, user: str, temperature: float 
                 return _parse_json(text)
             except Exception as e:  # noqa: BLE001 — any failure → retry / next provider
                 detail = "" if r is None or "HTTP" in str(e) or "empty" in str(e) else \
-                    f" [HTTP {r.status_code}, content-type={r.headers.get('content-type')}, body={r.text[:300]!r}]"
+                    f" [HTTP {r.status_code}, url={r.url}, redirects={[h.status_code for h in r.history]}, " \
+                    f"content-type={r.headers.get('content-type')}, body={r.text[:300]!r}]"
                 msg = f"{p['name']}/{p['model']} try {attempt + 1}: {type(e).__name__}: {e}{detail}"
                 print("  ! " + msg)
                 errors.append(msg)

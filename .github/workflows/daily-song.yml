@@ -77,7 +77,7 @@ jobs:
           [ -n "$IN_GENRE" ] && ARGS+=(--genre "$IN_GENRE")
           [ -n "$IN_BACKEND" ] && [ "$IN_BACKEND" != "auto" ] && ARGS+=(--backend "$IN_BACKEND")
           [ "$IN_UPLOAD" = "false" ] && ARGS+=(--no-upload)
-          python src/main.py "${ARGS[@]}"
+          python -u src/main.py "${ARGS[@]}"
 
       - name: Keep the video as a build artifact
         if: always()
@@ -93,5 +93,10 @@ jobs:
           git config user.name "ai-music-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/history.json
-          git diff --cached --quiet || git commit -m "🎵 $(jq -r '.[-1].title' data/history.json) [skip ci]"
-          git push
+          git diff --cached --quiet && exit 0
+          git commit -m "🎵 $(jq -r '.[-1].title' data/history.json) [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0
+            sleep $((i * 5))
+          done
+          exit 1

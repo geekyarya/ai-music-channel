@@ -38,13 +38,15 @@ music:
 
 # Lyrics/ideas come from an LLM. Providers are tried in order; the first one
 # whose credentials exist and responds wins.
-#   github → GitHub Models, free, uses the built-in GITHUB_TOKEN in Actions (no setup!)
+#   hf     → Hugging Face router, reuses HF_TOKEN (free monthly credits)
+#   github → GitHub Models, free, uses the built-in GITHUB_TOKEN in Actions
 #   gemini → Google AI Studio free tier (optional GEMINI_API_KEY secret)
 #   groq   → Groq free tier (optional GROQ_API_KEY secret)
 llm:
   providers:
+    - { name: hf,     model: "meta-llama/Llama-3.3-70B-Instruct" }
+    - { name: hf,     model: "openai/gpt-oss-120b" }
     - { name: github, model: "openai/gpt-4.1" }
-    - { name: github, model: "openai/gpt-4.1-mini" }
     - { name: gemini, model: "gemini-2.5-flash" }
     - { name: groq,   model: "llama-3.3-70b-versatile" }
 
