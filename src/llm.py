@@ -45,11 +45,13 @@ def chat_json(providers: list[dict], system: str, user: str, temperature: float 
             }
             if attempt == 0:  # some endpoints reject/mishandle response_format — drop it on retries
                 body["response_format"] = {"type": "json_object"}
+            if p["name"] == "gemini":  # thinking models: keep reasoning short so the reply comes fast
+                body["reasoning_effort"] = "low"
             r = None
             try:
-                r = requests.post(url, headers=headers, json=body, timeout=120, allow_redirects=False)
+                r = requests.post(url, headers=headers, json=body, timeout=240, allow_redirects=False)
                 if r.status_code >= 400:
-                    raise LLMError(f"HTTP {r.status_code}: {r.text[:300]!r}")
+                    raise LLMError(f"HTTP {r.status_code}: {r.text[:900]!r}")
                 text = r.json()["choices"][0]["message"]["content"] or ""
                 if not text.strip():
                     raise LLMError(f"empty completion: {r.text[:300]!r}")
@@ -63,6 +65,13 @@ def chat_json(providers: list[dict], system: str, user: str, temperature: float 
                 errors.append(msg)
                 if r is not None and r.status_code in (401, 403, 404):
                     break  # auth/model problem: retrying won't help
+                if r is not None and r.status_code == 429:
+                    # free tiers are rate-limited per minute; wait as long as the API asks (max 90 s)
+                    m = re.search(r'retry(?:Delay|-after)["\':\s]*"?(\d+)', r.text + str(r.headers), re.I)
+                    wait = min(90, int(m.group(1)) + 2) if m else 45
+                    print(f"    rate-limited, waiting {wait}s")
+                    time.sleep(wait)
+                    continue
                 time.sleep(3 * (attempt + 1))
     raise LLMError("All LLM providers failed:\n  " + "\n  ".join(errors))
 
