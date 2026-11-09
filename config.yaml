@@ -94,6 +94,9 @@ instagram:
   graph_version: "v23.0"
   hashtags: ["#newmusic", "#reels", "#music", "#song", "#lyrics", "#musicreels"]
 
+facebook:
+  enabled: true               # posts the reel to the Facebook Page too (token needs pages_manage_posts)
+
 youtube:
   privacy: "public"           # public | unlisted | private
   category_id: "10"           # 10 = Music

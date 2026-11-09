@@ -57,6 +57,35 @@ def build_description(spec: dict, cfg: dict, engine: str) -> str:
     return "\n".join(lines)
 
 
+def normalize_old_spec(spec: dict, cfg: dict) -> dict:
+    """Fill fields that songs made by older versions of the pipeline may lack, and apply today's AI-wording rules."""
+    from songwriter import _scrub
+    spec.setdefault("language", "en")
+    spec.setdefault("language_name", {"hi": "Hindi", "hinglish": "Hinglish"}.get(spec["language"], "English"))
+    spec.setdefault("song_type", "rap" if any(k in spec.get("genre", "") for k in ("rap", "trap", "drill", "hip"))
+                    else "sung")
+    spec.setdefault("hashtags", [])
+    spec.setdefault("description", "")
+    spec.setdefault("mood", "")
+    return _scrub(spec, cfg)
+
+
+def build_metadata(spec: dict, cfg: dict, engine: str) -> tuple[str, str, list[str]]:
+    """YouTube title, description and tags for a song."""
+    disclose = cfg["channel"].get("disclose_ai", False)
+    label = {"hi": "Hindi", "hinglish": "Hindi"}.get(spec["language"], "")
+    kind = " ".join(x for x in (spec["genre"].title(), label, "AI Song" if disclose else "Song") if x)
+    title = f"{spec['title']} | {cfg['channel']['artist']} ({kind})"
+    desc = build_description(spec, cfg, engine)
+    tags = cfg["youtube"]["default_tags"] + (cfg["youtube"].get("ai_tags", []) if disclose else []) \
+        + [spec["genre"], f"{spec['genre']} song", spec["title"]] + [t.lstrip("#") for t in spec["hashtags"]]
+    if spec["language"] != "en":
+        tags += ["hindi song", "new hindi song", "hindi rap" if spec["song_type"] == "rap" else "hindi gaana"]
+        if disclose:
+            tags.append("hindi ai song")
+    return title, desc, tags
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--genre", help="force a genre for this run")
@@ -94,17 +123,7 @@ def main():
     mp4 = video.render(spec, cfg, audio, song["timings"], os.path.join(out, "video.mp4"))
     thumb = video.thumbnail(spec, cfg, audio, os.path.join(out, "thumbnail.jpg"))
 
-    disclose = cfg["channel"].get("disclose_ai", False)
-    label = {"hi": "Hindi", "hinglish": "Hindi"}.get(spec["language"], "")
-    kind = " ".join(x for x in (spec["genre"].title(), label, "AI Song" if disclose else "Song") if x)
-    title = f"{spec['title']} | {cfg['channel']['artist']} ({kind})"
-    desc = build_description(spec, cfg, song["engine"])
-    tags = cfg["youtube"]["default_tags"] + (cfg["youtube"].get("ai_tags", []) if disclose else []) \
-        + [spec["genre"], f"{spec['genre']} song", spec["title"]] + [t.lstrip("#") for t in spec["hashtags"]]
-    if spec["language"] != "en":
-        tags += ["hindi song", "new hindi song", "hindi rap" if spec["song_type"] == "rap" else "hindi gaana"]
-        if disclose:
-            tags.append("hindi ai song")
+    title, desc, tags = build_metadata(spec, cfg, song["engine"])
     with open(os.path.join(out, "spec.json"), "w") as fh:
         json.dump({**spec, "engine": song["engine"], "timings": song["timings"], "yt_title": title,
                    "yt_description": desc}, fh, indent=2)
@@ -148,6 +167,13 @@ def main():
                     ig_link = instagram.post_reel(reel_path, instagram.build_caption(spec, cfg), cfg)
                 except Exception as e:  # noqa: BLE001
                     errors.append(f"Instagram: {e}")
+        import facebook
+        if reel_path and cfg.get("facebook", {}).get("enabled", True) and facebook.have_credentials():
+            try:
+                print("📤 posting Facebook Page reel…")
+                facebook.post_reel(reel_path, instagram.build_caption(spec, cfg), cfg)
+            except Exception as e:  # noqa: BLE001
+                errors.append(f"Facebook: {e}")
 
     history.append({"date": dt.date.today().isoformat(), "title": spec["title"], "genre": spec["genre"],
                     "language": spec["language"], "type": spec["song_type"],

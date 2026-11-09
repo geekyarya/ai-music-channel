@@ -1,4 +1,4 @@
-name: Post reel from an earlier run
+name: Post an earlier song
 
 # Re-post the vertical reel of a song made by an earlier "Daily AI Song" run (its artifact must still
 # exist; artifacts are kept 7 days). Useful for testing Instagram or re-posting a favourite.
@@ -8,8 +8,20 @@ on:
       run_id:
         description: "Run ID of the Daily AI Song run (the number in its URL)"
         required: true
+      instagram:
+        description: "Instagram Reel"
+        type: boolean
+        default: true
+      facebook:
+        description: "Facebook Page Reel"
+        type: boolean
+        default: false
+      youtube_video:
+        description: "YouTube full video"
+        type: boolean
+        default: false
       youtube_short:
-        description: "Also upload the reel as a YouTube Short"
+        description: "YouTube Short"
         type: boolean
         default: false
 
@@ -20,7 +32,7 @@ permissions:
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -52,11 +64,17 @@ jobs:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          IN_IG: ${{ inputs.instagram }}
+          IN_FB: ${{ inputs.facebook }}
+          IN_YTV: ${{ inputs.youtube_video }}
           IN_SHORT: ${{ inputs.youtube_short }}
         run: |
           DIR=$(dirname "$(find songs -name spec.json | head -1)")
           echo "Song folder: $DIR"
           ARGS=()
+          [ "$IN_IG" = "true" ] && ARGS+=(--instagram)
+          [ "$IN_FB" = "true" ] && ARGS+=(--facebook)
+          [ "$IN_YTV" = "true" ] && ARGS+=(--youtube-video)
           [ "$IN_SHORT" = "true" ] && ARGS+=(--youtube-short)
           python -u scripts/post_reel.py "$DIR" "${ARGS[@]}"
       - name: Keep the reel

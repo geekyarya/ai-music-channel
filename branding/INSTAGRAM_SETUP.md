@@ -26,8 +26,8 @@ account linked to a **Facebook Page**, and a Meta developer app. All free, no ca
 ## 4. Get a token in the Graph API Explorer
 1. Open <https://developers.facebook.com/tools/explorer>.
 2. Top right: **Meta App** = NGR Uploader. **User or Page** = User Token.
-3. **Permissions**, add: `pages_show_list`, `pages_read_engagement`, `instagram_basic`,
-   `instagram_content_publish`, `business_management`.
+3. **Permissions**, add: `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `instagram_basic`,
+   `instagram_content_publish`, `business_management` (`pages_manage_posts` lets it post Reels to the Facebook Page too).
 4. **Generate Access Token** → in the popup choose the **Neon Ghost Radio** Page and Instagram account → allow.
 5. Copy the token (it's short-lived, about 1 hour, so do step 5 straight away).
 
