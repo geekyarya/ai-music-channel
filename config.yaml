@@ -48,11 +48,14 @@ song:
 #   ace_step  → full AI song WITH real singing/rapping (free HF ZeroGPU; needs HF_TOKEN secret)
 #   local     → beat synthesized on the runner + rapped TTS vocals (always works, lower quality)
 music:
-  backends: ["ace_step", "local"]
+  # Only ACE-Step for uploads: the "local" engine (synth beat + TTS voice) is test-quality and must
+  # never be published. If ACE-Step can't make a song, that slot is skipped. Use --backend local to test.
+  backends: ["ace_step"]
   ace_step:
     spaces: ["ACE-Step/ACE-Step"]   # add duplicates/alternatives here
     infer_steps: 60
     guidance_scale: 15.0
+    quota_max_wait_minutes: 40      # if the free GPU quota is out, wait up to this long for it to refill
     # Script sent to ACE-Step for Hindi lyrics: "roman" (Hinglish spelling) or "devanagari".
     hindi_script: "roman"
   local:

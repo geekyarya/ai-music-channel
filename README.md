@@ -1,6 +1,6 @@
 # 🎵 AI Music Channel: fully automated, 100% free
 
-Every day, GitHub Actions:
+Three times a day (10:07 AM, 3:07 PM, 8:07 PM India time), GitHub Actions:
 
 1. **Writes an original song in English, Hindi or Hinglish, sometimes rap, sometimes a sung song.** An LLM picks a concept and writes lyrics, hook, tempo, key, mood, a visual style and a color palette. Genres rotate: rap, trap, drill, lo-fi, pop, rock, EDM, R&B, synthwave, afrobeats, country, and so on.
 2. **Makes the music with real AI vocals** using [ACE-Step](https://github.com/ace-step/ACE-Step), an open-source text-to-song model, on a free Hugging Face GPU.
@@ -75,7 +75,7 @@ Everything is in **`config.yaml`**:
 - `song.duration_seconds`: song length (ACE-Step)
 - `video`: resolution, fps, captions
 - `youtube.privacy`, tags, category
-- Posting time: the `cron:` line in `.github/workflows/daily-song.yml` (UTC)
+- Posting times: the `cron:` line in `.github/workflows/daily-song.yml` (UTC). 3 runs × (song + Short) = 6 uploads, YouTube's default daily API limit.
 
 Drop any `.ttf` into `assets/fonts/` to change typography.
 

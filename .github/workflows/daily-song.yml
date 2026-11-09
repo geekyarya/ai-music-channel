@@ -2,7 +2,9 @@ name: Daily AI Song
 
 on:
   schedule:
-    - cron: "37 14 * * *"   # every day at 14:37 UTC — change to suit your audience
+    # 3 songs a day (each with a Short = 6 YouTube uploads, the daily API limit):
+    # 04:37, 09:37, 14:37 UTC = 10:07 AM, 3:07 PM, 8:07 PM India time
+    - cron: "37 4,9,14 * * *"
   workflow_dispatch:
     inputs:
       language:
@@ -40,7 +42,7 @@ concurrency:
 jobs:
   make-and-post:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 

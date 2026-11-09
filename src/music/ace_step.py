@@ -16,6 +16,31 @@ from songwriter import lyrics_text
 
 
 def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
+    """Try ACE-Step; if the free ZeroGPU quota is temporarily used up, wait for it to refill and retry."""
+    import re
+    import time
+    a = cfg["music"]["ace_step"]
+    max_wait = float(a.get("quota_max_wait_minutes", 40)) * 60
+    waited = 0.0
+    while True:
+        try:
+            return _generate_once(spec, cfg, out_dir)
+        except RuntimeError as e:
+            msg = str(e)
+            if "ZeroGPU quota" not in msg or waited >= max_wait:
+                raise
+            m = re.search(r"Try again in (\d+):(\d\d):(\d\d)", msg)
+            hint = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + int(m.group(3)) if m else 0
+            if hint > max_wait - waited:
+                raise RuntimeError(f"{msg} (quota back in {hint // 60} min, more than we can wait)") from e
+            wait = max(hint + 30, 600)  # the quota refills gradually; give it at least 10 min
+            wait = min(wait, max_wait - waited)
+            print(f"  ⏳ ZeroGPU quota used up, waiting {wait / 60:.0f} min before retrying…", flush=True)
+            time.sleep(wait)
+            waited += wait
+
+
+def _generate_once(spec: dict, cfg: dict, out_dir: str) -> dict:
     from gradio_client import Client
 
     token = os.environ.get("HF_TOKEN")
