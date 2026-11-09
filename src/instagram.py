@@ -102,7 +102,32 @@ def build_caption(spec: dict, cfg: dict) -> str:
         f"Full song on YouTube: {cfg['channel']['name']} 🔗 link in bio", " ".join(tags)]))
 
 
+def ig_safe_copy(video_path: str) -> str:
+    """Re-encode with Instagram's recommended Reels settings (H.264 High, steady ~4.5 Mbps, 2 s keyframes,
+    AAC 48 kHz). Used when Instagram fails to process the original encode."""
+    import subprocess
+    out = os.path.splitext(video_path)[0] + "_ig.mp4"
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", video_path,
+                    "-c:v", "libx264", "-profile:v", "high", "-level", "4.1", "-pix_fmt", "yuv420p",
+                    "-r", "30", "-g", "60", "-keyint_min", "60", "-sc_threshold", "0",
+                    "-b:v", "4500k", "-maxrate", "5000k", "-bufsize", "10000k",
+                    "-c:a", "aac", "-b:a", "128k", "-ar", "48000", "-ac", "2",
+                    "-movflags", "+faststart", out], check=True)
+    return out
+
+
 def post_reel(video_path: str, caption: str, cfg: dict) -> str:
+    try:
+        return _post_reel(video_path, caption, cfg)
+    except RuntimeError as e:
+        if "ProcessingFailed" not in str(e) and "processing failed" not in str(e).lower():
+            raise
+        print("   Instagram couldn't process this encode; retrying with Instagram's recommended settings…")
+        time.sleep(20)
+        return _post_reel(ig_safe_copy(video_path), caption, cfg)
+
+
+def _post_reel(video_path: str, caption: str, cfg: dict) -> str:
     ver = cfg.get("instagram", {}).get("graph_version", "v23.0")
     token = _token()
     _warn_expiry(ver, token)
