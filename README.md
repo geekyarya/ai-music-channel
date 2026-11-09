@@ -25,6 +25,8 @@ That fallback raps or speaks the lyrics over a synthesized beat. It sounds notic
 
 ## Setup (about 20 minutes, once)
 
+> 📺 Creating the YouTube channel itself (name, avatar, banner, description) is covered step by step in **[branding/CHANNEL_SETUP.md](branding/CHANNEL_SETUP.md)**. Channel art is in `branding/`.
+
 ### 1. Create the repo
 Push this folder to a **public** GitHub repo. Public repos get unlimited Actions minutes. A private repo gets 2,000 minutes a month, which also works but is tighter.
 
