@@ -27,7 +27,22 @@ flow = InstalledAppFlow.from_client_secrets_file(path, SCOPES)
 creds = flow.run_local_server(port=0, access_type="offline", prompt="consent")
 info = json.load(open(path))
 app = info.get("installed") or info.get("web")
+values = [("YT_CLIENT_ID", app["client_id"]), ("YT_CLIENT_SECRET", app["client_secret"]),
+          ("YT_REFRESH_TOKEN", creds.refresh_token)]
 print("\nAdd these GitHub Actions secrets:\n")
-print(f"YT_CLIENT_ID      = {app['client_id']}")
-print(f"YT_CLIENT_SECRET  = {app['client_secret']}")
-print(f"YT_REFRESH_TOKEN  = {creds.refresh_token}")
+for name, value in values:
+    print(f"{name:<18}= {value}")
+
+# Also write them to a text file and open it, so they're easy to copy (Command Prompt makes copying awkward).
+out = os.path.join(os.path.dirname(os.path.abspath(path)), "youtube_secrets_DELETE_AFTER_USE.txt")
+with open(out, "w") as fh:
+    fh.write("Add each value below as a GitHub secret at:\n"
+             "https://github.com/geekyarya/ai-music-channel/settings/secrets/actions/new\n"
+             "Name = the line in CAPITALS, Secret = the line under it. Then DELETE this file.\n\n")
+    for name, value in values:
+        fh.write(f"{name}\n{value}\n\n")
+print(f"\nAlso saved to: {out}")
+try:
+    os.startfile(out)  # opens in Notepad on Windows
+except AttributeError:
+    pass
