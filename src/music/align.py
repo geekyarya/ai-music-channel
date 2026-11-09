@@ -61,5 +61,7 @@ def align_lyrics(audio_path: str, spec: dict, min_coverage: float = 0.45):
                             "text": text, "section": typ})
             p = j
     coverage = len(timings) / max(1, len(lines))
+    if hindi:
+        min_coverage = min(min_coverage, 0.35)  # Whisper is weaker on sung Hindi; partial captions beat none
     print(f"  aligned {len(timings)}/{len(lines)} lines ({coverage:.0%})")
     return timings if coverage >= min_coverage else None
