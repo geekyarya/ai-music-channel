@@ -15,12 +15,22 @@ def _service():
     from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build
 
+    def secret(name: str) -> str:
+        # tolerate copy-paste slips: whitespace/newlines, quotes, or a pasted "NAME = value" line
+        v = os.environ[name].strip().strip('"\'')
+        if "=" in v and v.split("=", 1)[0].strip().upper() == name:
+            v = v.split("=", 1)[1].strip()
+        return v
+
+    cid = secret("YT_CLIENT_ID")
+    if not cid.endswith(".apps.googleusercontent.com"):
+        print("   ! YT_CLIENT_ID doesn't look like an OAuth client ID (should end in .apps.googleusercontent.com)")
     creds = Credentials(
         None,
-        refresh_token=os.environ["YT_REFRESH_TOKEN"],
+        refresh_token=secret("YT_REFRESH_TOKEN"),
         token_uri="https://oauth2.googleapis.com/token",
-        client_id=os.environ["YT_CLIENT_ID"],
-        client_secret=os.environ["YT_CLIENT_SECRET"],
+        client_id=cid,
+        client_secret=secret("YT_CLIENT_SECRET"),
         scopes=SCOPES,
     )
     return build("youtube", "v3", credentials=creds, cache_discovery=False)
