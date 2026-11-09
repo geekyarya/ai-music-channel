@@ -145,11 +145,7 @@ def main():
             else:
                 try:
                     print("📤 posting Instagram reel…")
-                    tags_ig = list(dict.fromkeys(spec["hashtags"] + cfg["instagram"].get("hashtags", [])))[:25]
-                    caption = "\n\n".join(filter(None, [
-                        f"{spec['title']} 🎧", spec["description"], cfg["youtube"].get("engagement_line"),
-                        "Full song on YouTube: Neon Ghost Radio 🔗 link in bio", " ".join(tags_ig)]))
-                    ig_link = instagram.post_reel(reel_path, caption, cfg)
+                    ig_link = instagram.post_reel(reel_path, instagram.build_caption(spec, cfg), cfg)
                 except Exception as e:  # noqa: BLE001
                     errors.append(f"Instagram: {e}")
 

@@ -1,0 +1,68 @@
+name: Post reel from an earlier run
+
+# Re-post the vertical reel of a song made by an earlier "Daily AI Song" run (its artifact must still
+# exist; artifacts are kept 7 days). Useful for testing Instagram or re-posting a favourite.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Run ID of the Daily AI Song run (the number in its URL)"
+        required: true
+      youtube_short:
+        description: "Also upload the reel as a YouTube Short"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: System packages
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q ffmpeg fonts-dejavu-core
+      - name: Fonts
+        continue-on-error: true
+        run: |
+          mkdir -p assets/fonts
+          curl -fsSL -o assets/fonts/Anton-Regular.ttf https://github.com/google/fonts/raw/main/ofl/anton/Anton-Regular.ttf
+          curl -fsSL -o "assets/fonts/Inter.ttf" "https://github.com/google/fonts/raw/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf"
+      - run: pip install -r requirements.txt
+      - name: Download the song from that run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: songs
+      - name: Post the reel
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          IN_SHORT: ${{ inputs.youtube_short }}
+        run: |
+          DIR=$(dirname "$(find songs -name spec.json | head -1)")
+          echo "Song folder: $DIR"
+          ARGS=()
+          [ "$IN_SHORT" = "true" ] && ARGS+=(--youtube-short)
+          python -u scripts/post_reel.py "$DIR" "${ARGS[@]}"
+      - name: Keep the reel
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reel-${{ github.run_number }}
+          path: songs/**/reel.mp4
+          retention-days: 7
+          if-no-files-found: ignore

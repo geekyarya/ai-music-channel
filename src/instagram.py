@@ -38,6 +38,13 @@ def _check(r: requests.Response) -> dict:
     return data
 
 
+def build_caption(spec: dict, cfg: dict) -> str:
+    tags = list(dict.fromkeys(spec.get("hashtags", []) + cfg.get("instagram", {}).get("hashtags", [])))[:25]
+    return "\n\n".join(filter(None, [
+        f"{spec['title']} 🎧", spec.get("description", ""), cfg.get("youtube", {}).get("engagement_line"),
+        f"Full song on YouTube: {cfg['channel']['name']} 🔗 link in bio", " ".join(tags)]))
+
+
 def post_reel(video_path: str, caption: str, cfg: dict) -> str:
     ver = cfg.get("instagram", {}).get("graph_version", "v23.0")
     ig_user, token = _env("IG_USER_ID"), _env("IG_ACCESS_TOKEN")
