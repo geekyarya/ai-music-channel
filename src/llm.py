@@ -30,27 +30,35 @@ def chat_json(providers: list[dict], system: str, user: str, temperature: float 
         if not key:
             errors.append(f"{p['name']}: {key_env} not set")
             continue
+        headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+        if p["name"] == "github":
+            headers.update({"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"})
         for attempt in range(3):
+            body = {
+                "model": p["model"],
+                "temperature": temperature,
+                "messages": [{"role": "system", "content": system},
+                             {"role": "user", "content": user}],
+            }
+            if attempt == 0:  # some endpoints reject/mishandle response_format — drop it on retries
+                body["response_format"] = {"type": "json_object"}
+            r = None
             try:
-                r = requests.post(
-                    url,
-                    headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-                    json={
-                        "model": p["model"],
-                        "temperature": temperature,
-                        "messages": [{"role": "system", "content": system},
-                                     {"role": "user", "content": user}],
-                        "response_format": {"type": "json_object"},
-                    },
-                    timeout=120,
-                )
-                if r.status_code == 429 or r.status_code >= 500:
-                    raise LLMError(f"HTTP {r.status_code}: {r.text[:200]}")
-                r.raise_for_status()
-                text = r.json()["choices"][0]["message"]["content"]
+                r = requests.post(url, headers=headers, json=body, timeout=120)
+                if r.status_code >= 400:
+                    raise LLMError(f"HTTP {r.status_code}: {r.text[:300]!r}")
+                text = r.json()["choices"][0]["message"]["content"] or ""
+                if not text.strip():
+                    raise LLMError(f"empty completion: {r.text[:300]!r}")
                 return _parse_json(text)
             except Exception as e:  # noqa: BLE001 — any failure → retry / next provider
-                errors.append(f"{p['name']}/{p['model']} try {attempt + 1}: {e}")
+                detail = "" if r is None or "HTTP" in str(e) or "empty" in str(e) else \
+                    f" [HTTP {r.status_code}, content-type={r.headers.get('content-type')}, body={r.text[:300]!r}]"
+                msg = f"{p['name']}/{p['model']} try {attempt + 1}: {type(e).__name__}: {e}{detail}"
+                print("  ! " + msg)
+                errors.append(msg)
+                if r is not None and r.status_code in (401, 403, 404):
+                    break  # auth/model problem: retrying won't help
                 time.sleep(3 * (attempt + 1))
     raise LLMError("All LLM providers failed:\n  " + "\n  ".join(errors))
 

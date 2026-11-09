@@ -74,9 +74,9 @@ def pick_genre(genres: list[dict], history: list[dict], avoid_recent: int, overr
 def write_song(cfg: dict, history: list[dict], genre_override: str | None = None, offline: bool = False) -> dict:
     genre = pick_genre(cfg["genres"], history, cfg.get("avoid_recent", 5), genre_override)
     if offline:
-        spec = _offline_song(genre)
-    else:
-        recent_themes = "; ".join(h.get("theme", "") for h in history[-15:]) or "none"
+        return _normalize(_offline_song(genre), genre)
+    recent_themes = "; ".join(h.get("theme", "") for h in history[-15:]) or "none"
+    try:
         spec = chat_json(
             cfg["llm"]["providers"],
             SYSTEM,
@@ -86,7 +86,10 @@ def write_song(cfg: dict, history: list[dict], genre_override: str | None = None
                 styles=" | ".join(f'"{s}"' for s in VISUAL_STYLES),
             ),
         )
-    return _normalize(spec, genre)
+        return _normalize(spec, genre)
+    except Exception as e:  # noqa: BLE001 — never miss a day because of the LLM
+        print(f"::warning::LLM songwriting failed, using built-in fallback lyrics: {e}")
+        return _normalize(_offline_song(genre), genre)
 
 
 def _normalize(spec: dict, genre: dict) -> dict:
