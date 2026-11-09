@@ -68,6 +68,7 @@ When it finishes, download the `song-N` artifact to watch the video. Once you're
 
 ## Customize
 Everything is in **`config.yaml`**:
+- `channel.disclose_ai`: `false` keeps "AI" out of titles, descriptions, tags and channel art so viewers can guess; `true` is reveal mode. YouTube's synthetic-content flag is always set either way, as YouTube's policy requires.
 - `channel.name` / `artist`: your channel's branding
 - `genres`: add or remove genres and their sound descriptions
 - `song.duration_seconds`: song length (ACE-Step)

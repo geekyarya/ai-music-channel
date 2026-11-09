@@ -18,19 +18,20 @@ GitHub pipeline so it can upload.
 ## 3. Basic info (YouTube Studio → Customization → Basic info)
 **Description** (paste):
 
-> A brand-new AI-made song every single day, in English, Hindi and Hinglish.
-> Rap, pop, desi hip hop, Bollywood, lo-fi, rock, synthwave and more, each with its own audio-reactive music video and karaoke lyrics.
+> A brand-new song every single day, in English, Hindi and Hinglish.
+> Rap, pop, desi hip hop, Bollywood, lo-fi, rock, synthwave and more, each with its own animated music video and karaoke lyrics.
 >
-> 🤖 Everything here is created by AI: the lyrics, the vocals, the music and the visuals. Every song is original.
->
-> Har din ek naya AI gaana. Subscribe karo aur daily drop miss mat karo! 🔔
+> Har din ek naya gaana. Subscribe karo aur daily drop miss mat karo! 🔔
 
-**Links**: add your GitHub repo if you want to show how it's made.
+(While `channel.disclose_ai` is false, nothing on the channel mentions AI. On reveal day, set it to true,
+re-run `python scripts/make_branding.py`, re-upload the art and update this description.)
+
+**Links**: don't link the GitHub repo until reveal day; it's public and explains exactly how the songs are made.
 
 **Studio → Settings → Channel → Advanced settings**:
 - Audience: **No, not made for kids**
 - Country: India (or your own)
-- Keywords: `ai music, ai song, hindi song, hindi rap, desi hip hop, bollywood, new song, ai generated music, hinglish`
+- Keywords: `new music, hindi song, hindi rap, desi hip hop, bollywood, new song, hinglish, music video, lyrics`
 
 **Studio → Settings → Upload defaults**:
 - Category: **Music**

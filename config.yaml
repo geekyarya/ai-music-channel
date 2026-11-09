@@ -1,7 +1,12 @@
 # ─── AI Music Channel configuration ──────────────────────────────────────────
 channel:
   name: "Neon Ghost Radio"          # shown on videos & thumbnails — change it!
-  artist: "NGR"                     # the AI "artist" credited on every track
+  artist: "NGR"                     # the "artist" credited on every track
+  # false = titles, descriptions, tags, hashtags and channel art never mention AI, so viewers can
+  #         guess for themselves. YouTube's own "altered or synthetic content" flag stays on regardless
+  #         (platform requirement; it's a small note in the expanded description).
+  # true  = reveal mode: "AI Song" in titles, a "how this was made" section, AI tags, AI channel art.
+  disclose_ai: false
 
 # Each day picks a language (weighted) and a song type (rap vs. sung).
 languages:
@@ -79,4 +84,7 @@ youtube:
   privacy: "public"           # public | unlisted | private
   category_id: "10"           # 10 = Music
   made_for_kids: false
-  default_tags: ["ai music", "ai generated song", "music video", "new music"]
+  default_tags: ["new music", "music video", "new song", "original song", "lyrics video"]
+  ai_tags: ["ai music", "ai generated song", "ai song"]        # added only when disclose_ai is true
+  # Optional line added to every description, e.g. "Real voice or AI? 🤔 Comment your guess 👇"
+  engagement_line: ""

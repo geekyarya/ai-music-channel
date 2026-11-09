@@ -401,7 +401,8 @@ def thumbnail(spec: dict, cfg: dict, audio: str, out_path: str) -> str:
     st.update(W=1280, H=720, ds=2, thumb=True)
     _init(st)
     f = st["f"]
-    i = int(np.argmax(np.convolve(f["energy"], np.ones(30), mode="same")[int(6 * f["fps"]):])) + int(6 * f["fps"])
+    skip = min(int(6 * f["fps"]), f["n"] // 3)  # skip the intro card, even on very short clips
+    i = int(np.argmax(np.convolve(f["energy"], np.ones(30), mode="same")[skip:])) + skip
     img = Image.frombytes("RGB", (1280, 720), render_frame(i))
     # repaint header area with big title
     ov = Image.new("RGBA", img.size, (0, 0, 0, 0))

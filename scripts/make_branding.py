@@ -37,6 +37,7 @@ def background(style, w, h, ds=2):
 
 def main():
     cfg = yaml.safe_load(open(os.path.join(ROOT, "config.yaml")))
+    ai = cfg["channel"].get("disclose_ai", False)
     name, artist = cfg["channel"]["name"], cfg["channel"]["artist"]
     out = os.path.join(ROOT, "branding")
     os.makedirs(out, exist_ok=True)
@@ -47,7 +48,7 @@ def main():
     video._ring(d, 400, 400, 205, fake_features()["spec"][0], 0.9, acc, 5)
     d.ellipse([200, 200, 600, 600], fill=(8, 8, 14), outline=acc, width=8)
     video._center_text(d, 400, 385, artist, video.font("title", 150), (255, 255, 255), 360)
-    video._center_text(d, 400, 488, "♪ AI MUSIC", video.font("body", 34), acc)
+    video._center_text(d, 400, 488, "♪ AI MUSIC" if ai else "♪ MUSIC", video.font("body", 34), acc)
     img.save(os.path.join(out, "avatar.png"))
 
     # banner 2560x1440 — only the centre 1546x423 is visible on every device
@@ -58,7 +59,7 @@ def main():
     img = Image.alpha_composite(img.convert("RGBA"), ov).convert("RGB")
     d = ImageDraw.Draw(img)
     video._center_text(d, 1280, 660, name.upper(), video.font("title", 150), (255, 255, 255), 1450)
-    video._center_text(d, 1280, 790, "A new AI song every day  •  English  •  Hindi  •  Hinglish",
+    video._center_text(d, 1280, 790, f"A new {'AI ' if ai else ''}song every day  •  English  •  Hindi  •  Hinglish",
                        video.font("body", 46), acc, 1450)
     video._center_text(d, 1280, 865, "rap  •  pop  •  desi hip hop  •  bollywood  •  lo-fi  •  rock",
                        video.font("body", 34), (220, 220, 230), 1450)
