@@ -40,6 +40,7 @@ def chat_json(providers: list[dict], system: str, user: str, temperature: float 
             body = {
                 "model": p["model"],
                 "temperature": temperature,
+                "max_tokens": 4096,
                 "messages": [{"role": "system", "content": system},
                              {"role": "user", "content": user}],
             }
@@ -66,12 +67,17 @@ def chat_json(providers: list[dict], system: str, user: str, temperature: float 
                 if r is not None and r.status_code in (401, 403, 404):
                     break  # auth/model problem: retrying won't help
                 if r is not None and r.status_code == 429:
-                    # free tiers are rate-limited per minute; wait as long as the API asks (max 90 s)
+                    if re.search(r"per ?day|PerDay|retry in \d+h|retry in [1-9]\d*m", r.text, re.I):
+                        print("    daily quota used up for this model — moving on")
+                        break  # retrying only burns more of tomorrow's quota
+                    # per-minute limit: wait as long as the API asks (max 90 s)
                     m = re.search(r'retry(?:Delay|-after)["\':\s]*"?(\d+)', r.text + str(r.headers), re.I)
                     wait = min(90, int(m.group(1)) + 2) if m else 45
                     print(f"    rate-limited, waiting {wait}s")
                     time.sleep(wait)
                     continue
+                if isinstance(e, requests.Timeout):
+                    break  # a timed-out request still counts against quota; don't hammer it
                 time.sleep(3 * (attempt + 1))
     raise LLMError("All LLM providers failed:\n  " + "\n  ".join(errors))
 
