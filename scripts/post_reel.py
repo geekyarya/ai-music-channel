@@ -31,7 +31,7 @@ if not os.path.exists(path):
 
 ok = True
 if not instagram.have_credentials():
-    print("::error::IG_USER_ID / IG_ACCESS_TOKEN secrets are not set")
+    print("::error::No Instagram token secret (IG_ACCESS_TOKEN or INSTAGRAM_ACCESS_TOKEN) is set")
     ok = False
 else:
     try:

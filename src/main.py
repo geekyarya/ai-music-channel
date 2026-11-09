@@ -141,7 +141,7 @@ def main():
         import instagram
         if reel_path and cfg.get("instagram", {}).get("enabled", True):
             if not instagram.have_credentials():
-                print("⚠️  IG_USER_ID / IG_ACCESS_TOKEN not set — skipping Instagram")
+                print("⚠️  no Instagram token secret set — skipping Instagram")
             else:
                 try:
                     print("📤 posting Instagram reel…")

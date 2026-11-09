@@ -16,15 +16,72 @@ import requests
 GRAPH = "https://graph.facebook.com"
 
 
-def have_credentials() -> bool:
-    return bool(os.environ.get("IG_USER_ID", "").strip() and os.environ.get("IG_ACCESS_TOKEN", "").strip())
+TOKEN_NAMES = ("IG_ACCESS_TOKEN", "INSTAGRAM_ACCESS_TOKEN")
 
 
 def _env(name: str) -> str:
-    v = os.environ[name].strip().strip('"\'')
+    v = os.environ.get(name, "").strip().strip('"\'')
     if "=" in v and v.split("=", 1)[0].strip().upper() == name:
         v = v.split("=", 1)[1].strip()
     return v
+
+
+def _token() -> str:
+    for n in TOKEN_NAMES:
+        if _env(n):
+            return _env(n)
+    return ""
+
+
+def have_credentials() -> bool:
+    return bool(_token())
+
+
+def _base(token: str) -> str:
+    # Tokens from "Instagram API with Instagram Login" start with IG; Facebook-login tokens use graph.facebook.com
+    return "https://graph.instagram.com" if token.startswith("IG") else GRAPH
+
+
+def resolve_user(ver: str, token: str) -> str:
+    """IG_USER_ID if given, else discover the Instagram professional account from the token."""
+    if _env("IG_USER_ID"):
+        return _env("IG_USER_ID")
+    base = _base(token)
+    if base != GRAPH:
+        me = _check(requests.get(f"{base}/{ver}/me", params={"fields": "user_id,username",
+                                                              "access_token": token}, timeout=30))
+        print(f"   Instagram account: @{me.get('username')}")
+        return str(me.get("user_id") or me["id"])
+    # Page token: the Page itself has the linked account
+    r = requests.get(f"{GRAPH}/{ver}/me", params={"fields": "name,instagram_business_account{id,username}",
+                                                   "access_token": token}, timeout=30).json()
+    if isinstance(r, dict) and r.get("instagram_business_account"):
+        ig = r["instagram_business_account"]
+        print(f"   Instagram account: @{ig.get('username')} (via Page {r.get('name')})")
+        return ig["id"]
+    # User token: look through the user's Pages
+    pages = _check(requests.get(f"{GRAPH}/{ver}/me/accounts", params={
+        "fields": "name,instagram_business_account{id,username}", "access_token": token}, timeout=30))
+    for p in pages.get("data", []):
+        if p.get("instagram_business_account"):
+            ig = p["instagram_business_account"]
+            print(f"   Instagram account: @{ig.get('username')} (via Page {p.get('name')})")
+            return ig["id"]
+    raise RuntimeError("No Instagram professional account linked to a Facebook Page was found for this token")
+
+
+def _warn_expiry(ver: str, token: str) -> None:
+    if _base(token) != GRAPH:
+        return
+    try:
+        d = requests.get(f"{GRAPH}/{ver}/debug_token", params={"input_token": token, "access_token": token},
+                         timeout=30).json().get("data", {})
+        exp = d.get("expires_at") or 0
+        if exp and exp - time.time() < 7 * 86400:
+            print(f"::warning::Instagram token expires in {(exp - time.time()) / 3600:.1f} h. Run "
+                  "scripts/get_instagram_token.py to get a permanent Page token and save it as IG_ACCESS_TOKEN.")
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def _check(r: requests.Response) -> dict:
@@ -47,10 +104,13 @@ def build_caption(spec: dict, cfg: dict) -> str:
 
 def post_reel(video_path: str, caption: str, cfg: dict) -> str:
     ver = cfg.get("instagram", {}).get("graph_version", "v23.0")
-    ig_user, token = _env("IG_USER_ID"), _env("IG_ACCESS_TOKEN")
+    token = _token()
+    _warn_expiry(ver, token)
+    ig_user = resolve_user(ver, token)
+    G = _base(token)
 
     # 1. container
-    c = _check(requests.post(f"{GRAPH}/{ver}/{ig_user}/media", data={
+    c = _check(requests.post(f"{G}/{ver}/{ig_user}/media", data={
         "media_type": "REELS", "upload_type": "resumable", "caption": caption[:2200],
         "share_to_feed": "true", "access_token": token}, timeout=60))
     cid = c["id"]
@@ -64,7 +124,7 @@ def post_reel(video_path: str, caption: str, cfg: dict) -> str:
 
     # 3. wait for processing
     for _ in range(60):
-        st = _check(requests.get(f"{GRAPH}/{ver}/{cid}", params={
+        st = _check(requests.get(f"{G}/{ver}/{cid}", params={
             "fields": "status_code,status", "access_token": token}, timeout=30))
         code = st.get("status_code")
         if code == "FINISHED":
@@ -76,11 +136,11 @@ def post_reel(video_path: str, caption: str, cfg: dict) -> str:
         raise RuntimeError("Instagram processing timed out")
 
     # 4. publish
-    pub = _check(requests.post(f"{GRAPH}/{ver}/{ig_user}/media_publish", data={
+    pub = _check(requests.post(f"{G}/{ver}/{ig_user}/media_publish", data={
         "creation_id": cid, "access_token": token}, timeout=60))
     mid = pub["id"]
     try:
-        link = _check(requests.get(f"{GRAPH}/{ver}/{mid}", params={
+        link = _check(requests.get(f"{G}/{ver}/{mid}", params={
             "fields": "permalink", "access_token": token}, timeout=30)).get("permalink", mid)
     except Exception:  # noqa: BLE001
         link = mid
