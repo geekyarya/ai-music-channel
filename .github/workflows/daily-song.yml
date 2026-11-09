@@ -106,11 +106,25 @@ jobs:
         run: |
           git config user.name "ai-music-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/history.json
-          git diff --cached --quiet && exit 0
-          git commit -m "🎵 $(jq -r '.[-1].title' data/history.json) [skip ci]"
+          # Re-apply today's entry on top of the latest remote history, so parallel runs can't conflict.
+          cp data/history.json /tmp/history.mine.json
           for i in 1 2 3 4; do
-            git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0
+            git fetch -q origin main && git reset -q --hard origin/main
+            python - <<'PY'
+          import json
+          mine = json.load(open("/tmp/history.mine.json"))[-1]
+          try:
+              hist = json.load(open("data/history.json"))
+          except FileNotFoundError:
+              hist = []
+          if not hist or hist[-1] != mine:
+              hist.append(mine)
+          json.dump(hist, open("data/history.json", "w"), indent=2)
+          PY
+            git add data/history.json
+            git diff --cached --quiet && exit 0
+            git commit -q -m "🎵 $(jq -r '.[-1].title' data/history.json) [skip ci]"
+            git push -q origin HEAD:main && exit 0
             sleep $((i * 5))
           done
           exit 1
