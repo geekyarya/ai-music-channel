@@ -6,7 +6,8 @@ Every day, GitHub Actions:
 2. **Makes the music with real AI vocals** using [ACE-Step](https://github.com/ace-step/ACE-Step), an open-source text-to-song model, on a free Hugging Face GPU.
 3. **Renders a 1080p music video.** It's audio-reactive (tunnel, plasma, kaleidoscope, starfield, synthwave grid, or light waves), uses the song's palette, pulses with the bass, and shows karaoke lyrics synced with Whisper.
 4. **Makes a thumbnail and uploads to YouTube** with title, lyrics, tags, and the AI-content disclosure.
-5. **Logs it** in `data/history.json` so it doesn't repeat genres or themes.
+5. **Cuts a 45-second vertical reel** (from just before the first chorus) and posts it as a **YouTube Short** and an **Instagram Reel** (setup: [branding/INSTAGRAM_SETUP.md](branding/INSTAGRAM_SETUP.md)).
+6. **Logs it** in `data/history.json` so it doesn't repeat genres or themes.
 
 | Piece | Free service | Cost |
 |---|---|---|

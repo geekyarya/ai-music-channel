@@ -109,23 +109,62 @@ def main():
         json.dump({**spec, "engine": song["engine"], "timings": song["timings"], "yt_title": title,
                    "yt_description": desc}, fh, indent=2)
 
-    video_id = None
+    # Vertical reel (Instagram Reels + YouTube Shorts) from the best ~45 s of the song.
+    reel_path = None
+    if cfg.get("reels", {}).get("enabled", True):
+        import reel
+        reel_path = reel.make_reel(spec, cfg, audio, song["timings"], out)
+
+    # Each upload is independent: one failing must not stop the others. Failures fail the run at the end.
+    errors, video_id, short_id, ig_link = [], None, None, None
+    yt_lang = "hi" if spec["language"] != "en" else "en"
     if args.no_upload:
-        print("⏭  upload skipped (--no-upload)")
-    elif not youtube.have_credentials():
-        print("⚠️  YT_CLIENT_ID / YT_CLIENT_SECRET / YT_REFRESH_TOKEN not set — skipping upload")
+        print("⏭  uploads skipped (--no-upload)")
     else:
-        print("📤 uploading to YouTube…")
-        video_id = youtube.upload(mp4, thumb, title, desc, tags, cfg,
-                                  language="hi" if spec["language"] != "en" else "en")
+        if not youtube.have_credentials():
+            print("⚠️  YT_CLIENT_ID / YT_CLIENT_SECRET / YT_REFRESH_TOKEN not set — skipping YouTube")
+        else:
+            try:
+                print("📤 uploading to YouTube…")
+                video_id = youtube.upload(mp4, thumb, title, desc, tags, cfg, language=yt_lang)
+            except Exception as e:  # noqa: BLE001
+                errors.append(f"YouTube video: {e}")
+            if reel_path and cfg["reels"].get("youtube_shorts", True):
+                try:
+                    print("📤 uploading YouTube Short…")
+                    short_desc = "\n".join(filter(None, [spec["description"], cfg["youtube"].get("engagement_line"),
+                                 f"Full song on the channel 🎧", " ".join(spec["hashtags"][:5] + ["#shorts"])]))
+                    short_id = youtube.upload(reel_path, None, f"{spec['title']} 🎧 #shorts"[:100], short_desc,
+                                              tags + ["shorts"], cfg, language=yt_lang)
+                except Exception as e:  # noqa: BLE001
+                    errors.append(f"YouTube Short: {e}")
+        import instagram
+        if reel_path and cfg.get("instagram", {}).get("enabled", True):
+            if not instagram.have_credentials():
+                print("⚠️  IG_USER_ID / IG_ACCESS_TOKEN not set — skipping Instagram")
+            else:
+                try:
+                    print("📤 posting Instagram reel…")
+                    tags_ig = list(dict.fromkeys(spec["hashtags"] + cfg["instagram"].get("hashtags", [])))[:25]
+                    caption = "\n\n".join(filter(None, [
+                        f"{spec['title']} 🎧", spec["description"], cfg["youtube"].get("engagement_line"),
+                        "Full song on YouTube: Neon Ghost Radio 🔗 link in bio", " ".join(tags_ig)]))
+                    ig_link = instagram.post_reel(reel_path, caption, cfg)
+                except Exception as e:  # noqa: BLE001
+                    errors.append(f"Instagram: {e}")
 
     history.append({"date": dt.date.today().isoformat(), "title": spec["title"], "genre": spec["genre"],
                     "language": spec["language"], "type": spec["song_type"],
-                    "theme": spec["theme"], "engine": song["engine"], "video_id": video_id})
+                    "theme": spec["theme"], "engine": song["engine"], "video_id": video_id,
+                    "short_id": short_id, "instagram": ig_link})
     os.makedirs(os.path.dirname(HISTORY), exist_ok=True)
     with open(HISTORY, "w") as fh:
         json.dump(history, fh, indent=2)
+    for e in errors:
+        print(f"::error::{e}")
     print(f"🎉 done → {out}")
+    if errors:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

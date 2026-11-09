@@ -79,6 +79,8 @@ jobs:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           IN_GENRE: ${{ inputs.genre }}
           IN_LANGUAGE: ${{ inputs.language }}
           IN_TYPE: ${{ inputs.song_type }}
@@ -103,7 +105,9 @@ jobs:
           if-no-files-found: ignore
 
       - name: Commit history (also keeps the schedule alive — GitHub pauses crons on idle repos)
+        if: always()
         run: |
+          [ -f data/history.json ] || exit 0
           git config user.name "ai-music-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # Re-apply today's entry on top of the latest remote history, so parallel runs can't conflict.

@@ -210,6 +210,7 @@ BACKGROUNDS = dict(tunnel=bg_tunnel, plasma=bg_plasma, kaleido=bg_kaleido, starf
 
 # ─── per-process setup ─────────────────────────────────────────────────────────
 def _init(state):
+    G.clear()  # forked workers inherit the parent's G (e.g. thumb=True from an earlier thumbnail): start clean
     G.update(state)
     W, H, ds = G["W"], G["H"], G["ds"]
     lw, lh = W // ds, H // ds
@@ -240,7 +241,7 @@ def _bars(draw, W, H, spec, scale, color):
     n = len(spec)
     bw = W * 0.6 / n
     x0 = W * 0.2
-    base = H * 0.70
+    base = H * (0.80 if H > W else 0.70)  # portrait: keep bars clear of the lyrics
     for k, v in enumerate(spec):
         h = 6 * scale + v * 160 * scale
         draw.rectangle([x0 + k * bw + 1, base - h, x0 + (k + 1) * bw - 2, base], fill=color)
@@ -248,7 +249,7 @@ def _bars(draw, W, H, spec, scale, color):
 
 def render_frame(i: int) -> bytes:
     f, W, H, ds = G["f"], G["W"], G["H"], G["ds"]
-    sc = H / 1080
+    sc = min(W, H) / 1080  # works for landscape videos and portrait reels
     t = i / f["fps"]
     bg = BACKGROUNDS[G["style"]](i, f) * G["vignette"]
     if G.get("scene_tl"):  # lyric-driven scene (rain, fire, city, hearts…) crossfading per line
@@ -258,7 +259,7 @@ def render_frame(i: int) -> bytes:
     glow = Image.new("L", (G["lw"], G["lh"]))
     gd = ImageDraw.Draw(glow)
     ring_style = G["style"] not in ("synthgrid", "waves")
-    r0 = (H * 0.17 * (1 + 0.07 * f["bass"][i] + 0.05 * f["beat"][i])) / ds
+    r0 = (min(W, H) * 0.17 * (1 + 0.07 * f["bass"][i] + 0.05 * f["beat"][i])) / ds
     if ring_style:
         _ring(gd, G["lw"] / 2, G["lh"] / 2, r0, f["spec"][i], sc / ds, 255, max(1, int(5 * sc / ds)))
     else:
@@ -290,8 +291,9 @@ def render_frame(i: int) -> bytes:
            fill=acc, stroke_width=int(2 * sc), stroke_fill=(0, 0, 0))
 
     # intro title card
-    if t < 5:
-        a = min(1, t / 0.8) * min(1, (5 - t) / 0.8)
+    intro = G.get("intro", 5.0)
+    if t < intro:
+        a = min(1, t / 0.6) * min(1, (intro - t) / 0.6)
         ov = Image.new("RGBA", (W, H), (0, 0, 0, int(150 * a)))
         od = ImageDraw.Draw(ov)
         _center_text(od, W / 2, H / 2 - 40 * sc, G["title"], font("title", int(120 * sc)),
@@ -336,7 +338,7 @@ def _lyrics(d, img, t, W, H, sc, acc):
     while d.textlength(line["text"], font=fnt) > W * 0.88 and size > 24:
         size = int(size * 0.92)
         fnt = font("title", size)
-    y = H * (0.86 if G["style"] in ("synthgrid", "waves") else 0.80)
+    y = H * G["lyrics_y"] if G.get("lyrics_y") else H * (0.86 if G["style"] in ("synthgrid", "waves") else 0.80)
     enter = min(1.0, max(0.0, (t - (line["start"] - 0.25)) / 0.3))
     y += (1 - enter) ** 2 * 40 * sc  # line slides up into place
     total_w = d.textlength(line["text"], font=fnt)
@@ -369,10 +371,11 @@ def _state(spec, cfg, audio, timings):
     if v.get("lyric_scenes", True):
         tl = scenes.build_timeline(timings, f["duration"], scenes.default_scene(spec))
         print("   scenes: " + " → ".join(f"{n}@{s:.0f}s" for s, _, n in tl))
-    return dict(W=v["width"], H=v["height"], ds=3 if v["height"] >= 1000 else 2,
+    return dict(W=v["width"], H=v["height"], ds=3 if min(v["width"], v["height"]) >= 1000 else 2,
                 f=f, palette=spec["palette"], style=spec["visual_style"],
                 title=spec["title"], artist=cfg["channel"]["artist"], genre=spec["genre"],
-                timings=timings if v.get("lyrics_captions", True) else None, scene_tl=tl)
+                timings=timings if v.get("lyrics_captions", True) else None, scene_tl=tl,
+                intro=v.get("intro_seconds", 5.0), lyrics_y=v.get("lyrics_y"))
 
 
 def render(spec: dict, cfg: dict, audio: str, timings, out_path: str, workers: int | None = None) -> str:

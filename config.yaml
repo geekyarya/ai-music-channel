@@ -80,6 +80,17 @@ video:
   lyrics_captions: true
   lyric_scenes: true      # animated scenes driven by the lyrics (rain, fire, city, hearts, stars…)
 
+# Vertical 9:16 clip (best ~45 s, starting before the first chorus) for Reels and Shorts.
+reels:
+  enabled: true
+  seconds: 45
+  youtube_shorts: true        # also upload the clip as a YouTube Short
+
+instagram:
+  enabled: true               # needs IG_USER_ID + IG_ACCESS_TOKEN secrets (see branding/INSTAGRAM_SETUP.md)
+  graph_version: "v23.0"
+  hashtags: ["#newmusic", "#reels", "#music", "#song", "#lyrics", "#musicreels"]
+
 youtube:
   privacy: "public"           # public | unlisted | private
   category_id: "10"           # 10 = Music
