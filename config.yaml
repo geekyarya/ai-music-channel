@@ -2,23 +2,38 @@
 channel:
   name: "Neon Ghost Radio"          # shown on videos & thumbnails — change it!
   artist: "NGR"                     # the AI "artist" credited on every track
-  language: "English"
 
-# Genres rotate so the channel stays varied. The pipeline avoids repeating any
-# genre used in the last `avoid_recent` uploads.
+# Each day picks a language (weighted) and a song type (rap vs. sung).
+languages:
+  - { code: en,       name: "English",                              weight: 45 }
+  - { code: hi,       name: "Hindi",                                weight: 30 }
+  - { code: hinglish, name: "Hinglish (Hindi mixed with English)",  weight: 25 }
+song_types: { rap: 50, sung: 50 }
+
+# Genres rotate so the channel stays varied (no repeat within `avoid_recent`).
+# type: rap | sung.  langs: which languages it's used for (omit = all).
 genres:
-  - { name: "hip hop",     style: "boom bap hip hop, hard drums, vinyl crackle, rap" }
-  - { name: "trap",        style: "dark trap, 808 bass, hi-hat rolls, aggressive rap" }
-  - { name: "lo-fi",       style: "lo-fi hip hop, mellow, jazzy chords, chill vocals" }
-  - { name: "pop",         style: "modern pop, catchy hook, bright synths, female vocals" }
-  - { name: "synthwave",   style: "80s synthwave, retro synths, gated reverb drums, dreamy vocals" }
-  - { name: "rock",        style: "alternative rock, distorted guitars, live drums, powerful vocals" }
-  - { name: "edm",         style: "edm, festival, big drop, four on the floor, energetic vocals" }
-  - { name: "r&b",         style: "smooth r&b, neo soul, warm bass, silky vocals" }
-  - { name: "drill",       style: "uk drill, sliding 808, dark piano, rap" }
-  - { name: "pop punk",    style: "pop punk, fast drums, power chords, shouted chorus" }
-  - { name: "afrobeats",   style: "afrobeats, percussive groove, warm guitar, melodic vocals" }
-  - { name: "country",     style: "modern country, acoustic guitar, storytelling vocals" }
+  # rap
+  - { name: "hip hop",            type: rap,  style: "boom bap hip hop, hard drums, vinyl crackle, rap" }
+  - { name: "trap",               type: rap,  style: "dark trap, 808 bass, hi-hat rolls, aggressive rap" }
+  - { name: "drill",              type: rap,  style: "drill, sliding 808, dark piano, rap" }
+  - { name: "desi hip hop",       type: rap,  langs: [hi, hinglish], style: "desi hip hop, tabla samples, dholak, hard drums, indian rap" }
+  - { name: "desi drill",         type: rap,  langs: [hi, hinglish], style: "desi drill, sliding 808, sitar sample, dark, indian rap" }
+  - { name: "gully rap",          type: rap,  langs: [hi, hinglish], style: "mumbai gully rap, raw boom bap, street, indian rap" }
+  # sung
+  - { name: "pop",                type: sung, style: "modern pop, catchy hook, bright synths, female vocals" }
+  - { name: "lo-fi",              type: sung, style: "lo-fi, mellow, jazzy chords, chill vocals" }
+  - { name: "synthwave",          type: sung, style: "80s synthwave, retro synths, gated reverb drums, dreamy vocals" }
+  - { name: "rock",               type: sung, style: "alternative rock, distorted guitars, live drums, powerful vocals" }
+  - { name: "edm",                type: sung, style: "edm, festival, big drop, four on the floor, energetic vocals" }
+  - { name: "r&b",                type: sung, style: "smooth r&b, neo soul, warm bass, silky vocals" }
+  - { name: "afrobeats",          type: sung, langs: [en], style: "afrobeats, percussive groove, warm guitar, melodic vocals" }
+  - { name: "country",            type: sung, langs: [en], style: "modern country, acoustic guitar, storytelling vocals" }
+  - { name: "bollywood romantic", type: sung, langs: [hi, hinglish], style: "bollywood romantic ballad, strings, piano, soft tabla, emotional vocals" }
+  - { name: "bollywood dance",    type: sung, langs: [hi, hinglish], style: "bollywood dance pop, dhol, punchy synths, festive, energetic vocals" }
+  - { name: "sufi rock",          type: sung, langs: [hi],           style: "sufi rock, harmonium, electric guitar, qawwali claps, soulful vocals" }
+  - { name: "lo-fi bollywood",    type: sung, langs: [hi, hinglish], style: "lo-fi bollywood, mellow, vinyl, soft sitar, chill vocals" }
+  - { name: "indie pop",          type: sung, langs: [hi, hinglish], style: "indian indie pop, acoustic guitar, warm, heartfelt vocals" }
 avoid_recent: 5
 
 song:
@@ -33,22 +48,23 @@ music:
     spaces: ["ACE-Step/ACE-Step"]   # add duplicates/alternatives here
     infer_steps: 60
     guidance_scale: 15.0
+    # Script sent to ACE-Step for Hindi lyrics: "roman" (Hinglish spelling) or "devanagari".
+    hindi_script: "roman"
   local:
     tts: "edge"                     # "edge" (free neural voices) → falls back to espeak-ng
 
 # Lyrics/ideas come from an LLM. Providers are tried in order; the first one
 # whose credentials exist and responds wins.
-#   hf     → Hugging Face router, reuses HF_TOKEN (free monthly credits)
-#   github → GitHub Models, free, uses the built-in GITHUB_TOKEN in Actions
-#   gemini → Google AI Studio free tier (optional GEMINI_API_KEY secret)
-#   groq   → Groq free tier (optional GROQ_API_KEY secret)
+#   gemini → Google AI Studio free tier (GEMINI_API_KEY secret) — recommended, great at Hindi
+#   groq   → Groq free tier (GROQ_API_KEY secret)
+#   github → GitHub Models via the built-in GITHUB_TOKEN (returned a bare "OK" in our tests)
+#   hf     → Hugging Face router (needs paid credits — not free)
+# If none work, a built-in song is used so the daily upload still happens.
 llm:
   providers:
-    - { name: hf,     model: "meta-llama/Llama-3.3-70B-Instruct" }
-    - { name: hf,     model: "openai/gpt-oss-120b" }
-    - { name: github, model: "openai/gpt-4.1" }
     - { name: gemini, model: "gemini-2.5-flash" }
     - { name: groq,   model: "llama-3.3-70b-versatile" }
+    - { name: github, model: "openai/gpt-4.1" }
 
 video:
   width: 1920

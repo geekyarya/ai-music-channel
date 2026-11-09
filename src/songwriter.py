@@ -1,4 +1,4 @@
-"""Turns 'today' into a complete song spec: concept, lyrics, sound, and visual vibe."""
+"""Turns 'today' into a complete song spec: language, concept, lyrics, sound, and visual vibe."""
 from __future__ import annotations
 
 import random
@@ -15,40 +15,61 @@ VISUAL_STYLES = {
     "waves": "layered glowing waveforms like ocean light",
 }
 
-SYSTEM = """You are a hit songwriter and creative director for an AI music YouTube channel.
-You write ORIGINAL songs. Never copy or closely imitate existing lyrics, and never name or
-impersonate real artists. Keep lyrics radio-safe (no slurs, no explicit sexual content).
-Write vivid, specific, emotionally real lines with strong rhythm and rhyme. Hooks must be catchy.
-Respond with a single JSON object only."""
+SYSTEM = """You are a hit songwriter and creative director for an AI music YouTube channel that
+releases songs in English, Hindi and Hinglish. You write ORIGINAL songs. Never copy or closely
+imitate existing lyrics, and never name or impersonate real artists. Keep lyrics radio-safe
+(no slurs, no explicit sexual content). Write vivid, specific, emotionally real lines with
+strong rhythm and rhyme. Hooks must be catchy. Respond with a single JSON object only."""
+
+LANG_RULES = {
+    "en": 'Write the lyrics entirely in English. Each entry in "lines" is a plain string.',
+    "hi": ('Write in Hindi — everyday Hindustani as used in Bollywood songs and Indian rap '
+           '(Hindi/Urdu words like dil, pyaar, sapne, raah; not formal Sanskritised Hindi). '
+           'Each entry in "lines" is an object {"roman": "...", "devanagari": "..."}: the same line in '
+           'Roman script (Hinglish spelling as used on Indian YouTube, e.g. "Dil mein hai toofan") and '
+           'in Devanagari. Title in Roman script.'),
+    "hinglish": ('Write in Hinglish: mostly Hindi with natural English words and phrases mixed in, the way '
+                 'modern Indian pop and desi hip hop is written. Each entry in "lines" is an object '
+                 '{"roman": "...", "devanagari": "..."}: the line in Roman script and in Devanagari '
+                 '(English words transliterated into Devanagari). Title in Roman script.'),
+}
+
+TYPE_RULES = {
+    "rap": ("This is a RAP song: rhythmic spoken flow, dense internal rhymes, multisyllabic rhyme "
+            "schemes, punchlines, 8-14 words per verse line, a chanted hook."),
+    "sung": ("This is a SUNG song with a real melody: singable open vowels, shorter lines (4-9 words), "
+             "emotional build into a big, repeatable chorus."),
+}
 
 USER_TMPL = """Write today's song.
 
+Language: {language}
+{lang_rule}
+Song type: {type_rule}
 Genre: {genre}
 Sound palette: {style}
-Language: {language}
 Avoid these themes (used recently): {recent_themes}
 Creative seed (use loosely for inspiration): {seed}
 
 Return JSON with exactly these keys:
 {{
   "title": "short catchy song title",
-  "theme": "one-line summary of what the song is about",
-  "mood": "2-4 mood words",
+  "theme": "one-line summary of what the song is about (English)",
+  "mood": "2-4 mood words (English)",
   "bpm": integer tempo appropriate for the genre,
   "key": "e.g. A minor",
   "vocal": "male" or "female",
-  "music_tags": "comma separated music-generation tags: genre, instruments, vocal type, mood, production style (max 25 words, no artist names)",
+  "music_tags": "comma separated English music-generation tags: genre, instruments, vocal type, mood, production style (max 25 words, no artist names)",
   "sections": [
-    {{"type": "verse" | "chorus" | "bridge" | "pre-chorus" | "outro", "lines": ["...", "..."]}}
+    {{"type": "verse" | "chorus" | "bridge" | "pre-chorus" | "hook" | "outro", "lines": [ ... ]}}
   ],
   "visual_style": one of {styles},
   "palette": ["#rrggbb", "#rrggbb", "#rrggbb", "#rrggbb"]  (4 colors matching the vibe, dark→bright),
-  "description": "2-3 sentence YouTube description hook (no hashtags)",
+  "description": "2-3 sentence YouTube description hook in English (for Hindi songs you may add one Hinglish line)",
   "hashtags": ["#tag", ...] (5-8)
 }}
 
-Structure: verse (8 lines), chorus (4-6 lines), verse (8 lines), chorus, bridge (4 lines), chorus.
-Each line 5-12 words. Rap genres: dense internal rhymes and multisyllabic flow."""
+Structure: verse (8 lines), chorus (4-6 lines), verse (8 lines), chorus, bridge (4 lines), chorus."""
 
 SEEDS = [
     "a late-night drive", "an old photograph", "winning against the odds", "a city that never sleeps",
@@ -57,45 +78,82 @@ SEEDS = [
     "a secret rooftop", "neon in puddles", "becoming who you were meant to be", "a letter never sent",
     "a festival at sunrise", "the grind before success", "ghost of a memory", "falling for a stranger",
     "an ocean you've never seen", "the quiet after a storm", "a mixtape from someone", "gravity",
+    "monsoon in a small town", "chai at 3 a.m. with friends", "a local train in Mumbai",
+    "a mother's voice on the phone", "first salary", "a hostel room farewell", "Diwali lights from a rooftop",
 ]
 
 
-def pick_genre(genres: list[dict], history: list[dict], avoid_recent: int, override: str | None = None) -> dict:
+def _weighted(items: list, weights: list):
+    return random.choices(items, weights=weights, k=1)[0]
+
+
+def pick_language(cfg: dict, override: str | None = None) -> dict:
+    langs = cfg.get("languages") or [{"code": "en", "name": "English", "weight": 1}]
+    if override:
+        for l in langs:
+            if override.lower() in (l["code"].lower(), l["name"].lower()):
+                return l
+        raise ValueError(f"unknown language {override!r}; choose from {[l['code'] for l in langs]}")
+    return _weighted(langs, [l.get("weight", 1) for l in langs])
+
+
+def pick_genre(cfg: dict, lang: str, history: list[dict], override: str | None = None,
+               song_type: str | None = None) -> dict:
+    genres = cfg["genres"]
     if override:
         for g in genres:
             if g["name"].lower() == override.lower():
                 return g
-        return {"name": override, "style": override}
-    recent = {h.get("genre") for h in history[-avoid_recent:]}
-    choices = [g for g in genres if g["name"] not in recent] or genres
-    return random.choice(choices)
+        return {"name": override, "style": override, "type": song_type or "sung"}
+    if not song_type:
+        types = cfg.get("song_types") or {"rap": 1, "sung": 1}
+        song_type = _weighted(list(types), list(types.values()))
+    ok = [g for g in genres if g.get("type", "sung") == song_type and lang in g.get("langs", [lang])]
+    recent = {h.get("genre") for h in history[-cfg.get("avoid_recent", 5):]}
+    return random.choice([g for g in ok if g["name"] not in recent] or ok or genres)
 
 
-def write_song(cfg: dict, history: list[dict], genre_override: str | None = None, offline: bool = False) -> dict:
-    genre = pick_genre(cfg["genres"], history, cfg.get("avoid_recent", 5), genre_override)
+def write_song(cfg: dict, history: list[dict], genre_override: str | None = None, offline: bool = False,
+               language: str | None = None, song_type: str | None = None) -> dict:
+    lang = pick_language(cfg, language)
+    genre = pick_genre(cfg, lang["code"], history, genre_override, song_type)
+    gtype = genre.get("type", "sung")
     if offline:
-        return _normalize(_offline_song(genre), genre)
+        return _normalize(_offline_song(genre, lang["code"]), genre, lang)
     recent_themes = "; ".join(h.get("theme", "") for h in history[-15:]) or "none"
     try:
         spec = chat_json(
             cfg["llm"]["providers"],
             SYSTEM,
             USER_TMPL.format(
-                genre=genre["name"], style=genre["style"], language=cfg["channel"]["language"],
+                language=lang["name"], lang_rule=LANG_RULES.get(lang["code"], LANG_RULES["en"]),
+                type_rule=TYPE_RULES[gtype], genre=genre["name"], style=genre["style"],
                 recent_themes=recent_themes, seed=random.choice(SEEDS),
                 styles=" | ".join(f'"{s}"' for s in VISUAL_STYLES),
             ),
         )
-        return _normalize(spec, genre)
+        return _normalize(spec, genre, lang)
     except Exception as e:  # noqa: BLE001 — never miss a day because of the LLM
         print(f"::warning::LLM songwriting failed, using built-in fallback lyrics: {e}")
-        return _normalize(_offline_song(genre), genre)
+        return _normalize(_offline_song(genre, lang["code"]), genre, lang)
 
 
-def _normalize(spec: dict, genre: dict) -> dict:
+def _line_pair(l) -> tuple[str, str | None]:
+    """A lyric line → (display text in Roman/Latin script, native-script text or None)."""
+    if isinstance(l, dict):
+        roman = str(l.get("roman") or l.get("text") or "").strip()
+        native = str(l.get("devanagari") or l.get("native") or "").strip() or None
+        return (roman or native or ""), native
+    return str(l).strip(), None
+
+
+def _normalize(spec: dict, genre: dict, lang: dict) -> dict:
     """Make the LLM output safe to use downstream, whatever it returned."""
     spec["genre"] = genre["name"]
     spec["genre_style"] = genre["style"]
+    spec["song_type"] = genre.get("type", "sung")
+    spec["language"] = lang["code"]
+    spec["language_name"] = lang["name"]
     spec["title"] = re.sub(r'[<>"]', "", str(spec.get("title") or "Untitled")).strip()[:80]
     try:
         spec["bpm"] = int(max(60, min(180, int(spec.get("bpm", 100)))))
@@ -108,9 +166,13 @@ def _normalize(spec: dict, genre: dict) -> dict:
     spec["palette"] = (pal + ["#0b0221", "#3a0ca3", "#f72585", "#4cc9f0"])[:4] if len(pal) < 4 else pal[:4]
     sections = []
     for s in spec.get("sections", []):
-        lines = [str(l).strip() for l in s.get("lines", []) if str(l).strip()]
-        if lines:
-            sections.append({"type": str(s.get("type", "verse")).lower(), "lines": lines})
+        pairs = [_line_pair(l) for l in s.get("lines", [])]
+        pairs = [p for p in pairs if p[0]]
+        if pairs:
+            sec = {"type": str(s.get("type", "verse")).lower(), "lines": [p[0] for p in pairs]}
+            if any(p[1] for p in pairs):
+                sec["native"] = [p[1] or p[0] for p in pairs]
+            sections.append(sec)
     if not sections:
         raise ValueError("Song has no lyrics")
     spec["sections"] = sections
@@ -122,13 +184,20 @@ def _normalize(spec: dict, genre: dict) -> dict:
     return spec
 
 
-def lyrics_text(spec: dict) -> str:
-    """Lyrics in the [section] format music models expect."""
-    return "\n\n".join(f"[{s['type']}]\n" + "\n".join(s["lines"]) for s in spec["sections"])
+def lyrics_text(spec: dict, script: str = "display") -> str:
+    """Lyrics in the [section] format music models expect.
+    script="display" → Roman/Latin lines; script="native" → Devanagari where available."""
+    out = []
+    for s in spec["sections"]:
+        lines = s.get("native", s["lines"]) if script == "native" else s["lines"]
+        out.append(f"[{s['type']}]\n" + "\n".join(lines))
+    return "\n\n".join(out)
 
 
 # ─── Offline fallback (no LLM) — used for testing and as a last resort ──────────
-def _offline_song(genre: dict) -> dict:
+def _offline_song(genre: dict, lang: str = "en") -> dict:
+    if lang in ("hi", "hinglish"):
+        return _offline_song_hindi(genre)
     a = ["midnight", "neon", "golden", "broken", "electric", "silent", "burning", "endless"]
     n = ["city", "signal", "highway", "heartbeat", "skyline", "echo", "satellite", "river"]
     title = f"{random.choice(a).title()} {random.choice(n).title()}"
@@ -173,4 +242,57 @@ def _offline_song(genre: dict) -> dict:
                                   ["#011627", "#2ec4b6", "#e71d36", "#fdfffc"]]),
         "description": f"{title} is about refusing to fade into the noise of the city.",
         "hashtags": ["#aimusic", "#newmusic", f"#{genre['name'].replace(' ', '')}"],
+    }
+
+
+# Original Hindi fallback song — each line is (Roman, Devanagari).
+_HI_VERSE1 = [
+    ("Raat ki sadkon pe chalta hoon akela", "रात की सड़कों पे चलता हूँ अकेला"),
+    ("Sapnon ka bojh hai, dil ka ye mela", "सपनों का बोझ है, दिल का ये मेला"),
+    ("Gali gali mein goonje mere naam ki kahani", "गली गली में गूँजे मेरे नाम की कहानी"),
+    ("Aankhon mein aag hai, lehron mein rawani", "आँखों में आग है, लहरों में रवानी"),
+    ("Maa ne kaha tha beta kabhi na rukna", "माँ ने कहा था बेटा कभी ना रुकना"),
+    ("Duniya jhukaye toh bhi tu na jhukna", "दुनिया झुकाए तो भी तू ना झुकना"),
+    ("Khaali jeb mein bhi bhare hain iraade", "खाली जेब में भी भरे हैं इरादे"),
+    ("Waqt se pehle main poore karun waade", "वक़्त से पहले मैं पूरे करूँ वादे"),
+]
+_HI_CHORUS = [
+    ("Hum chalte jaayenge, roshni ki ore", "हम चलते जाएँगे, रोशनी की ओर"),
+    ("Dil mein toofan hai, saanson mein shor", "दिल में तूफ़ान है, साँसों में शोर"),
+    ("Haath utha ke bolo, ye shehar hamara", "हाथ उठा के बोलो, ये शहर हमारा"),
+    ("Har andhere ke baad hai naya sitara", "हर अँधेरे के बाद है नया सितारा"),
+]
+_HI_VERSE2 = [
+    ("Chhoti si khidki se dekha aasmaan", "छोटी सी खिड़की से देखा आसमान"),
+    ("Mitti ke ghar mein bhi pale armaan", "मिट्टी के घर में भी पले अरमान"),
+    ("Logon ne bola ye sab hai bekaar", "लोगों ने बोला ये सब है बेकार"),
+    ("Aaj wahi log karte intezaar", "आज वही लोग करते इंतज़ार"),
+    ("Har ek chot ne sikhaya sabak", "हर एक चोट ने सिखाया सबक"),
+    ("Jalta raha main jaise koi chamak", "जलता रहा मैं जैसे कोई चमक"),
+    ("Ab na koi darr hai na koi deewar", "अब ना कोई डर है ना कोई दीवार"),
+    ("Seene mein dhadke ek naya sansaar", "सीने में धड़के एक नया संसार"),
+]
+_HI_BRIDGE = [
+    ("Agar ye raat lambi hai toh kya", "अगर ये रात लंबी है तो क्या"),
+    ("Subah ka vaada mujhse hai juda", "सुबह का वादा मुझसे है जुड़ा"),
+    ("Har zakhm ek kahani ban jaaye", "हर ज़ख़्म एक कहानी बन जाए"),
+    ("Har aansu mera geet ban jaaye", "हर आँसू मेरा गीत बन जाए"),
+]
+
+
+def _offline_song_hindi(genre: dict) -> dict:
+    def sec(t, pairs):
+        return {"type": t, "lines": [{"roman": r, "devanagari": d} for r, d in pairs]}
+    return {
+        "title": random.choice(["Roshni Ki Ore", "Naya Sitara", "Shehar Hamara"]),
+        "theme": "walking alone at night toward a brighter future, carrying a mother's words",
+        "mood": "determined, hopeful", "bpm": random.choice([86, 92, 96]), "key": "D minor",
+        "vocal": "male", "music_tags": genre["style"],
+        "sections": [sec("verse", _HI_VERSE1), sec("chorus", _HI_CHORUS), sec("verse", _HI_VERSE2),
+                     sec("chorus", _HI_CHORUS), sec("bridge", _HI_BRIDGE), sec("chorus", _HI_CHORUS)],
+        "visual_style": random.choice(list(VISUAL_STYLES)),
+        "palette": random.choice([["#1a0505", "#7a1f0f", "#e2711d", "#ffc971"],
+                                  ["#05061a", "#2b2d7a", "#d1495b", "#edae49"]]),
+        "description": "Ek akela raasta, ek maa ki seekh, aur roshni ki taraf badhte kadam.",
+        "hashtags": ["#hindisong", "#aimusic", "#desihiphop", "#newhindisong"],
     }

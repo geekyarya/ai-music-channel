@@ -23,8 +23,11 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
         raise RuntimeError("HF_TOKEN not set — ACE-Step needs a (free) Hugging Face token")
 
     a = cfg["music"]["ace_step"]
-    vocal = f"{spec['vocal']} vocals"
+    lang = spec.get("language", "en")
+    vocal = {"hi": f"hindi {spec['vocal']} vocals", "hinglish": f"hindi and english {spec['vocal']} vocals"} \
+        .get(lang, f"{spec['vocal']} vocals")
     prompt = f"{spec['music_tags']}, {vocal}, {spec['bpm']} BPM, {spec['mood']}"
+    script = "native" if lang != "en" and a.get("hindi_script", "roman") == "devanagari" else "display"
     errors = []
     for space in a["spaces"]:
         try:
@@ -33,7 +36,7 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
             result = client.predict(
                 audio_duration=float(cfg["song"]["duration_seconds"]),
                 prompt=prompt,
-                lyrics=lyrics_text(spec),
+                lyrics=lyrics_text(spec, script),
                 infer_step=int(a.get("infer_steps", 60)),
                 guidance_scale=float(a.get("guidance_scale", 15.0)),
                 scheduler_type="euler",

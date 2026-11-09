@@ -2,7 +2,7 @@
 
 Every day, GitHub Actions:
 
-1. **Writes an original song.** An LLM picks a concept and writes lyrics, hook, tempo, key, mood, a visual style and a color palette. Genres rotate: rap, trap, drill, lo-fi, pop, rock, EDM, R&B, synthwave, afrobeats, country, and so on.
+1. **Writes an original song in English, Hindi or Hinglish, sometimes rap, sometimes a sung song.** An LLM picks a concept and writes lyrics, hook, tempo, key, mood, a visual style and a color palette. Genres rotate: rap, trap, drill, lo-fi, pop, rock, EDM, R&B, synthwave, afrobeats, country, and so on.
 2. **Makes the music with real AI vocals** using [ACE-Step](https://github.com/ace-step/ACE-Step), an open-source text-to-song model, on a free Hugging Face GPU.
 3. **Renders a 1080p music video.** It's audio-reactive (tunnel, plasma, kaleidoscope, starfield, synthwave grid, or light waves), uses the song's palette, pulses with the bass, and shows karaoke lyrics synced with Whisper.
 4. **Makes a thumbnail and uploads to YouTube** with title, lyrics, tags, and the AI-content disclosure.
@@ -10,7 +10,7 @@ Every day, GitHub Actions:
 
 | Piece | Free service | Cost |
 |---|---|---|
-| Lyrics / ideas | Hugging Face router (same `HF_TOKEN`, free monthly credits), with GitHub Models, Gemini or Groq as fallbacks | $0 |
+| Lyrics / ideas | Google Gemini free tier (`GEMINI_API_KEY`), with Groq or GitHub Models as fallbacks | $0 |
 | Singing + music | ACE-Step on Hugging Face ZeroGPU (free account) | $0 |
 | Fallback music | Beat synthesized on the runner + Edge neural TTS rap (espeak-ng as backup) | $0 |
 | Lyric timing | faster-whisper on CPU | $0 |
@@ -54,8 +54,9 @@ Push this folder to a **public** GitHub repo. Public repos get unlimited Actions
 > and describe it as "personal automation uploading my own AI-generated music videos to my own channel."
 > Approval usually takes a few days to a few weeks. Until then, the videos upload as private, and you can still review them in YouTube Studio.
 
-### 4. (Optional) extra LLM fallbacks
-`GEMINI_API_KEY` (Google AI Studio free tier) and/or `GROQ_API_KEY` (Groq free tier). Not required, because the Hugging Face token already covers lyrics.
+### 4. Lyrics AI key (free)
+Create a key at <https://aistudio.google.com/apikey> and add it as the `GEMINI_API_KEY` secret. `GROQ_API_KEY` (<https://console.groq.com/keys>) is an optional backup.
+Without either, the channel still posts daily but reuses built-in lyrics.
 
 ### 5. Test it
 Go to **Actions → Daily AI Song → Run workflow**, untick *Upload*, and run it.

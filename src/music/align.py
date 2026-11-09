@@ -12,7 +12,10 @@ from difflib import SequenceMatcher
 
 
 def _norm(s: str) -> str:
-    return re.sub(r"[^a-z0-9' ]", "", s.lower()).strip()
+    """Lowercase and drop punctuation/symbols, keeping letters of any script (incl. Devanagari matras)."""
+    import unicodedata
+    s = "".join(c for c in s.lower() if not unicodedata.category(c).startswith(("P", "S")))
+    return re.sub(r"\s+", " ", s).strip()
 
 
 def align_lyrics(audio_path: str, spec: dict, min_coverage: float = 0.45):
@@ -28,17 +31,20 @@ def align_lyrics(audio_path: str, spec: dict, min_coverage: float = 0.45):
     pcm = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", audio_path, "-f", "f32le", "-ac", "1",
                           "-ar", "16000", "-"], capture_output=True, check=True).stdout
     audio = np.frombuffer(pcm, dtype=np.float32)
-    model = WhisperModel("small.en", device="cpu", compute_type="int8")
+    hindi = spec.get("language") in ("hi", "hinglish")
+    model = WhisperModel("small" if hindi else "small.en", device="cpu", compute_type="int8")
     segs, _ = model.transcribe(audio, word_timestamps=True, condition_on_previous_text=False,
-                               vad_filter=False, language="en", beam_size=3)
+                               vad_filter=False, language="hi" if hindi else "en", beam_size=3)
     words = [(_norm(w.word), w.start, w.end) for s in segs for w in (s.words or []) if _norm(w.word)]
     if not words:
         return None
 
-    lines = [(l, s["type"]) for s in spec["sections"] for l in s["lines"]]
+    # Whisper writes Hindi in Devanagari, so match against the Devanagari lyrics, display Roman.
+    lines = [(l, s.get("native", s["lines"])[k] if hindi else l, s["type"])
+             for s in spec["sections"] for k, l in enumerate(s["lines"])]
     timings, p = [], 0
-    for text, typ in lines:
-        target = _norm(text)
+    for text, match_text, typ in lines:
+        target = _norm(match_text)
         n = len(target.split())
         best = (0.0, None, None)
         for i in range(p, min(len(words), p + 80)):

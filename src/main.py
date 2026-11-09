@@ -35,7 +35,7 @@ def build_description(spec: dict, cfg: dict, engine: str) -> str:
         spec["description"],
         "",
         f"🎧 {spec['title']} — {ch['artist']}",
-        f"Genre: {spec['genre']}  |  Mood: {spec['mood']}  |  {spec['bpm']} BPM",
+        f"Genre: {spec['genre']}  |  Language: {spec['language_name']}  |  Mood: {spec['mood']}  |  {spec['bpm']} BPM",
         "",
         "📝 LYRICS",
         lyrics_text(spec).replace("[", "(").replace("]", ")"),
@@ -46,13 +46,15 @@ def build_description(spec: dict, cfg: dict, engine: str) -> str:
         f"Music & vocals: {engine}",
         "Visuals: procedural audio-reactive animation",
         "",
-        " ".join(spec["hashtags"] + ["#aimusic", "#aisong"]),
+        " ".join(spec["hashtags"] + ["#aimusic", "#aisong"] + (["#hindisong"] if spec["language"] != "en" else [])),
     ])
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--genre", help="force a genre for this run")
+    ap.add_argument("--language", help="force a language: en | hi | hinglish")
+    ap.add_argument("--type", choices=["rap", "sung"], help="force rap or a sung song")
     ap.add_argument("--backend", choices=["ace_step", "local"], help="force a music backend")
     ap.add_argument("--offline", action="store_true", help="skip the LLM (built-in test lyrics)")
     ap.add_argument("--no-upload", action="store_true")
@@ -64,8 +66,10 @@ def main():
     history = load_history()
 
     print("✍️  writing song…")
-    spec = write_song(cfg, history, args.genre, offline=args.offline)
-    print(f"   “{spec['title']}” — {spec['genre']} / {spec['mood']} / {spec['bpm']} BPM / {spec['visual_style']}")
+    spec = write_song(cfg, history, args.genre, offline=args.offline, language=args.language,
+                      song_type=args.type)
+    print(f"   “{spec['title']}” — {spec['language_name']} {spec['song_type']} / {spec['genre']} / "
+          f"{spec['mood']} / {spec['bpm']} BPM / {spec['visual_style']}")
 
     slug = re.sub(r"[^a-z0-9]+", "-", spec["title"].lower()).strip("-")[:40]
     out = os.path.join(ROOT, "out", f"{dt.date.today():%Y-%m-%d}-{slug}")
@@ -83,10 +87,14 @@ def main():
     mp4 = video.render(spec, cfg, audio, song["timings"], os.path.join(out, "video.mp4"))
     thumb = video.thumbnail(spec, cfg, audio, os.path.join(out, "thumbnail.jpg"))
 
-    title = f"{spec['title']} | {cfg['channel']['artist']} ({spec['genre'].title()} AI Song)"
+    label = {"hi": "Hindi", "hinglish": "Hindi"}.get(spec["language"], "")
+    title = f"{spec['title']} | {cfg['channel']['artist']} ({spec['genre'].title()} {label + ' ' if label else ''}AI Song)"
     desc = build_description(spec, cfg, song["engine"])
     tags = cfg["youtube"]["default_tags"] + [spec["genre"], f"{spec['genre']} song", spec["title"]] \
         + [t.lstrip("#") for t in spec["hashtags"]]
+    if spec["language"] != "en":
+        tags += ["hindi song", "new hindi song", "hindi ai song", "hindi rap" if spec["song_type"] == "rap"
+                 else "hindi gaana"]
     with open(os.path.join(out, "spec.json"), "w") as fh:
         json.dump({**spec, "engine": song["engine"], "timings": song["timings"], "yt_title": title,
                    "yt_description": desc}, fh, indent=2)
@@ -98,9 +106,11 @@ def main():
         print("⚠️  YT_CLIENT_ID / YT_CLIENT_SECRET / YT_REFRESH_TOKEN not set — skipping upload")
     else:
         print("📤 uploading to YouTube…")
-        video_id = youtube.upload(mp4, thumb, title, desc, tags, cfg)
+        video_id = youtube.upload(mp4, thumb, title, desc, tags, cfg,
+                                  language="hi" if spec["language"] != "en" else "en")
 
     history.append({"date": dt.date.today().isoformat(), "title": spec["title"], "genre": spec["genre"],
+                    "language": spec["language"], "type": spec["song_type"],
                     "theme": spec["theme"], "engine": song["engine"], "video_id": video_id})
     os.makedirs(os.path.dirname(HISTORY), exist_ok=True)
     with open(HISTORY, "w") as fh:

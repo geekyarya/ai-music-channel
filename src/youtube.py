@@ -30,7 +30,8 @@ def _clean(s: str, n: int) -> str:
     return s.replace("<", "").replace(">", "")[:n]
 
 
-def upload(video: str, thumb: str | None, title: str, description: str, tags: list[str], cfg: dict) -> str:
+def upload(video: str, thumb: str | None, title: str, description: str, tags: list[str], cfg: dict,
+           language: str = "en") -> str:
     from googleapiclient.errors import HttpError
     from googleapiclient.http import MediaFileUpload
 
@@ -49,8 +50,8 @@ def upload(video: str, thumb: str | None, title: str, description: str, tags: li
             "description": _clean(description, 4900),
             "tags": kept,
             "categoryId": y.get("category_id", "10"),
-            "defaultLanguage": "en",
-            "defaultAudioLanguage": "en",
+            "defaultLanguage": language,
+            "defaultAudioLanguage": language,
         },
         "status": {
             "privacyStatus": y.get("privacy", "public"),

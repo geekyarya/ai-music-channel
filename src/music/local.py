@@ -23,14 +23,23 @@ NOTE = {"c": 0, "c#": 1, "db": 1, "d": 2, "d#": 3, "eb": 3, "e": 4, "f": 5, "f#"
         "g": 7, "g#": 8, "ab": 8, "a": 9, "a#": 10, "bb": 10, "b": 11}
 
 VOICES = {
-    "male": ["en-US-GuyNeural", "en-US-ChristopherNeural", "en-US-AndrewNeural", "en-US-EricNeural"],
-    "female": ["en-US-AriaNeural", "en-US-JennyNeural", "en-US-AvaNeural", "en-US-MichelleNeural"],
+    ("en", "male"): ["en-US-GuyNeural", "en-US-ChristopherNeural", "en-US-AndrewNeural", "en-US-EricNeural"],
+    ("en", "female"): ["en-US-AriaNeural", "en-US-JennyNeural", "en-US-AvaNeural", "en-US-MichelleNeural"],
+    ("hi", "male"): ["hi-IN-MadhurNeural"],
+    ("hi", "female"): ["hi-IN-SwaraNeural"],
 }
+ESPEAK = {("en", "male"): "en-us+m3", ("en", "female"): "en-us+f3",
+          ("hi", "male"): "hi+m3", ("hi", "female"): "hi+f3"}
+DESI = ("desi", "bollywood", "sufi", "gully", "indian")
 
 
 # ─── genre → groove ────────────────────────────────────────────────────────────
 def family(genre: str) -> str:
     g = genre.lower()
+    if "romantic" in g or "sufi" in g:
+        return "lofi" if "romantic" in g else "rock"
+    if "gully" in g:
+        return "hiphop"
     if any(k in g for k in ("trap", "drill")):
         return "trap"
     if any(k in g for k in ("lo-fi", "lofi", "r&b", "soul", "jazz")):
@@ -89,6 +98,16 @@ def clap():
     t = t_(0.3)
     env = sum(np.exp(-np.clip(t - d, 0, None) * 60) * (t >= d) for d in (0, 0.011, 0.022)) / 3
     return bp(np.random.randn(len(t)), 900, 5000) * (env + 0.4 * np.exp(-t * 12)) * 0.8
+
+
+def tabla(pitch=1.0, open_=True):
+    """Tabla-ish stroke: pitched membrane with a fast upward bend (open 'na') or a dry slap."""
+    t = t_(0.35 if open_ else 0.12)
+    f0 = (330 if open_ else 210) * pitch
+    f = f0 * (1 + 0.25 * np.exp(-t * 30))
+    tone = np.sin(2 * np.pi * np.cumsum(f) / SR) + 0.35 * np.sin(2 * np.pi * np.cumsum(f * 2.1) / SR)
+    click = hp(np.random.randn(len(t)), 2500) * np.exp(-t * 120) * 0.3
+    return (tone * np.exp(-t * (9 if open_ else 30)) + click) * 0.45
 
 
 def hat(open_=False):
@@ -214,9 +233,9 @@ def _tts_edge(lines, voice, rate, tmp):
     return asyncio.run(run())
 
 
-def _tts_espeak(lines, vocal, tmp):
+def _tts_espeak(lines, vocal, tmp, lang="en"):
     paths = []
-    v = "en-us+f3" if vocal == "female" else "en-us+m3"
+    v = ESPEAK[(lang, vocal)]
     for i, text in enumerate(lines):
         p = os.path.join(tmp, f"v{i}.wav")
         subprocess.run(["espeak-ng", "-v", v, "-s", "165", "-p", "45", "-w", p, text], check=True)
@@ -224,17 +243,17 @@ def _tts_espeak(lines, vocal, tmp):
     return paths
 
 
-def synth_vocals(lines, vocal, fam, tts_pref, tmp):
+def synth_vocals(lines, vocal, fam, tts_pref, tmp, lang="en"):
     rate = "+12%" if fam in RAP_FAMILIES else "-4%"
     paths, engine = None, None
     if tts_pref == "edge":
         try:
-            voice = random.choice(VOICES[vocal])
+            voice = random.choice(VOICES[(lang, vocal)])
             paths, engine = _tts_edge(lines, voice, rate, tmp), f"edge-tts {voice}"
         except Exception as e:  # noqa: BLE001
             print(f"  ! edge-tts unavailable ({type(e).__name__}: {str(e)[:120]}), using espeak-ng")
     if paths is None:
-        paths, engine = _tts_espeak(lines, vocal, tmp), "espeak-ng"
+        paths, engine = _tts_espeak(lines, vocal, tmp, lang), "espeak-ng"
     return [_decode(p) for p in paths], engine
 
 
@@ -263,13 +282,16 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
     step = bar / 16
 
     # 1) vocals first — the arrangement is laid out around them
-    lines, owners = [], []
+    lang = "hi" if spec.get("language") in ("hi", "hinglish") else "en"
+    lines, spoken, owners = [], [], []
     for si, s in enumerate(spec["sections"]):
-        for l in s["lines"]:
+        for k, l in enumerate(s["lines"]):
             lines.append(l)
+            spoken.append(s.get("native", s["lines"])[k] if lang == "hi" else l)  # Devanagari → correct accent
             owners.append(si)
     with tempfile.TemporaryDirectory() as tmp:
-        vox, tts_engine = synth_vocals(lines, spec["vocal"], fam, cfg["music"]["local"].get("tts", "edge"), tmp)
+        vox, tts_engine = synth_vocals(spoken, spec["vocal"], fam, cfg["music"]["local"].get("tts", "edge"),
+                                       tmp, lang)
 
     rap = fam in RAP_FAMILIES
     base_bars = 1 if (rap or bar > 3.2) else 2
@@ -305,6 +327,9 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
     music = np.zeros((n, 2))
     vbus = np.zeros((n, 2))
     K, S, C, H, OH = kick(), snare(), clap(), hat(), hat(True)
+    desi = any(k in spec["genre"].lower() for k in DESI)
+    TA, TB, TC = tabla(1.0), tabla(1.33), tabla(1.0, open_=False)
+    tabla_pat = {0: TC, 3: TA, 6: TB, 8: TC, 10: TA, 11: TA, 14: TB}
     sec_of_bar = {}
     for a, b, typ in section_bars:
         for k in range(a, b):
@@ -332,6 +357,8 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
                         place(drums, H, ts + step / 2, 0.25, pan=0.25)
                 if s16 in pat["ohat"]:
                     place(drums, OH, ts, 0.35, pan=-0.2)
+                if desi and s16 in tabla_pat and not (typ == "intro" and b < 2):
+                    place(drums, tabla_pat[s16], ts, 0.55 if hot else 0.4, pan=-0.35)
                 if fam == "four" and hot and s16 % 2 == 0 and s16 not in pat["ohat"]:
                     place(drums, H, ts, 0.18, pan=0.3)
 
