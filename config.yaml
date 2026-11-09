@@ -72,6 +72,7 @@ video:
   height: 1080
   fps: 30
   lyrics_captions: true
+  lyric_scenes: true      # animated scenes driven by the lyrics (rain, fire, city, hearts, stars…)
 
 youtube:
   privacy: "public"           # public | unlisted | private

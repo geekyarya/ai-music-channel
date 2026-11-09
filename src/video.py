@@ -15,6 +15,8 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from scipy.io import wavfile
 
+import scenes
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 G: dict = {}  # per-process state (set by _init)
 
@@ -249,6 +251,8 @@ def render_frame(i: int) -> bytes:
     sc = H / 1080
     t = i / f["fps"]
     bg = BACKGROUNDS[G["style"]](i, f) * G["vignette"]
+    if G.get("scene_tl"):  # lyric-driven scene (rain, fire, city, hearts…) crossfading per line
+        bg = scenes.apply(bg, G["scene_tl"], t, f, i, G["accent"])
 
     # spectrum glow layer at low res
     glow = Image.new("L", (G["lw"], G["lh"]))
@@ -333,13 +337,20 @@ def _lyrics(d, img, t, W, H, sc, acc):
         size = int(size * 0.92)
         fnt = font("title", size)
     y = H * (0.86 if G["style"] in ("synthgrid", "waves") else 0.80)
+    enter = min(1.0, max(0.0, (t - (line["start"] - 0.25)) / 0.3))
+    y += (1 - enter) ** 2 * 40 * sc  # line slides up into place
     total_w = d.textlength(line["text"], font=fnt)
     x = W / 2 - total_w / 2
-    prog = (t - line["start"]) / max(0.3, line["end"] - line["start"])
+    dur = max(0.3, line["end"] - line["start"])
+    prog = (t - line["start"]) / dur
     lit = int(len(words) * min(1, max(0, prog)) + 0.999) if prog > 0 else 0
     for wi, w in enumerate(words):
         fill = (255, 255, 255) if wi < lit else (170, 170, 185)
-        d.text((x, y), w, font=fnt, fill=fill, anchor="ls", stroke_width=max(2, int(4 * sc)),
+        # word "pops" (jumps up, accent colour) for a moment as it is sung
+        pop = max(0.0, 1 - (t - (line["start"] + wi / len(words) * dur)) / 0.22) if wi < lit else 0.0
+        if pop > 0:
+            fill = tuple(int(a * pop + 255 * (1 - pop)) for a in acc)
+        d.text((x, y - pop * 12 * sc), w, font=fnt, fill=fill, anchor="ls", stroke_width=max(2, int(4 * sc)),
                stroke_fill=(0, 0, 0))
         if wi < lit:
             ww = d.textlength(w, font=fnt)
@@ -353,10 +364,15 @@ def _lyrics(d, img, t, W, H, sc, acc):
 # ─── public API ────────────────────────────────────────────────────────────────
 def _state(spec, cfg, audio, timings):
     v = cfg["video"]
+    f = analyze(audio, v["fps"])
+    tl = None
+    if v.get("lyric_scenes", True):
+        tl = scenes.build_timeline(timings, f["duration"], scenes.default_scene(spec))
+        print("   scenes: " + " → ".join(f"{n}@{s:.0f}s" for s, _, n in tl))
     return dict(W=v["width"], H=v["height"], ds=3 if v["height"] >= 1000 else 2,
-                f=analyze(audio, v["fps"]), palette=spec["palette"], style=spec["visual_style"],
+                f=f, palette=spec["palette"], style=spec["visual_style"],
                 title=spec["title"], artist=cfg["channel"]["artist"], genre=spec["genre"],
-                timings=timings if v.get("lyrics_captions", True) else None)
+                timings=timings if v.get("lyrics_captions", True) else None, scene_tl=tl)
 
 
 def render(spec: dict, cfg: dict, audio: str, timings, out_path: str, workers: int | None = None) -> str:
