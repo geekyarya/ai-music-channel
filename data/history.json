@@ -56,5 +56,17 @@
     "theme": "Leaving behind the hostel room echoes and packing up the past for good.",
     "engine": "ACE-Step (ACE-Step/ACE-Step)",
     "video_id": null
+  },
+  {
+    "date": "2026-11-09",
+    "title": "Suraj Drill",
+    "genre": "desi drill",
+    "language": "hinglish",
+    "type": "rap",
+    "theme": "Conquering the dark streets as dawn breaks over the festival grounds.",
+    "engine": "local synth (trap, 140 BPM) + edge-tts hi-IN-MadhurNeural",
+    "video_id": "ZvjJg0OSE-0",
+    "short_id": "_UuIMnaF8vI",
+    "instagram": null
   }
 ]
