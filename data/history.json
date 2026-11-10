@@ -80,5 +80,17 @@
     "video_id": "dwHktEU9_jQ",
     "short_id": "YHX9kiMVjHU",
     "instagram": null
+  },
+  {
+    "date": "2026-11-10",
+    "title": "Yaadon Ka Photo",
+    "genre": "bollywood romantic",
+    "language": "hi",
+    "type": "sung",
+    "theme": "Remembering a lost love through an old photograph",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "RNB2ASxPcGM",
+    "short_id": "dreRjU87PkQ",
+    "instagram": null
   }
 ]
