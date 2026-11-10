@@ -92,5 +92,17 @@
     "video_id": "RNB2ASxPcGM",
     "short_id": "dreRjU87PkQ",
     "instagram": null
+  },
+  {
+    "date": "2026-11-10",
+    "title": "Echoes & Edge",
+    "genre": "hip hop",
+    "language": "en",
+    "type": "rap",
+    "theme": "A lifelong friendship that stays strong through life's beats",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "K9RKk_TL758",
+    "short_id": "SFINK4JNfMY",
+    "instagram": null
   }
 ]
