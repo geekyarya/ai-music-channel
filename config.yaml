@@ -55,6 +55,7 @@ music:
   backends: ["kaggle", "ace_step"]
   kaggle:
     kernel_slug: "ngr-ace-step"     # private notebook created in your Kaggle account
+    accelerator: "NvidiaTeslaT4"    # Kaggle's free GPU (T4 x2)
     timeout_minutes: 50
   ace_step:
     spaces: ["ACE-Step/ACE-Step"]   # add duplicates/alternatives here

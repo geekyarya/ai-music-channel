@@ -1,0 +1,27 @@
+name: Check Kaggle
+
+# Shows whether the Kaggle key works and how much free GPU time is left. Makes no song.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "kaggle>=2.2" six
+      - env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          echo "== who am I"; kaggle config view 2>&1 | grep -iv key || true
+          echo "== GPU quota"; kaggle quota 2>&1 || true
+          echo "== my notebooks"; kaggle kernels list --mine 2>&1 | head -20 || true
+          echo "== ngr-ace-step status"; kaggle kernels status "$KAGGLE_USERNAME/ngr-ace-step" 2>&1 || true
+          echo "== ngr-ace-step log (tail)"; kaggle kernels logs "$KAGGLE_USERNAME/ngr-ace-step" 2>&1 | tail -40 || true

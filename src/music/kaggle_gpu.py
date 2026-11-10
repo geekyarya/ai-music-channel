@@ -60,10 +60,19 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
         with open(os.path.join(work, "kernel-metadata.json"), "w") as fh:
             json.dump({"id": kid, "title": slug, "code_file": "run.py", "language": "python",
                        "kernel_type": "script", "is_private": True, "enable_gpu": True,
+                       "machine_shape": k.get("accelerator", "NvidiaTeslaT4"),
                        "enable_internet": True, "dataset_sources": [], "competition_sources": [],
                        "kernel_sources": []}, fh)
         print(f"  → ACE-Step on Kaggle GPU ({kid}): {prompt}")
-        print("   " + _kaggle("kernels", "push", "-p", work).strip().splitlines()[-1])
+        quota = _kaggle("quota", check=False).strip()
+        print("   Kaggle quota: " + " | ".join(l.strip() for l in quota.splitlines() if l.strip())[:300])
+        timeout_s = int(float(k.get("timeout_minutes", 50)) * 60)
+        pushed = _kaggle("kernels", "push", "-p", work, "--accelerator", k.get("accelerator", "NvidiaTeslaT4"),
+                         "-t", str(timeout_s)).strip()
+        print("   " + " | ".join(pushed.splitlines()[-3:]))
+        if "error" in pushed.lower():
+            raise RuntimeError(f"Kaggle rejected the notebook: {pushed[-400:]}. Check that your Kaggle phone "
+                               "number is verified (kaggle.com → Settings → Account) and see 'Check Kaggle'.")
 
         deadline = time.time() + float(k.get("timeout_minutes", 50)) * 60
         status = ""
