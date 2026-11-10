@@ -32,7 +32,7 @@ def pip(*args):
 log("installing ACE-Step…")
 pip("--no-deps", "git+https://github.com/ace-step/ACE-Step.git")
 pip("diffusers==0.33.1", "transformers==4.50.0", "accelerate==1.6.0", "peft", "loguru", "pypinyin",
-    "hangul-romanize", "num2words", "py3langid", "spacy>=3.8.7,<3.9", "librosa>=0.11,<1", "soundfile",
+    "hangul-romanize", "num2words", "py3langid==0.3.0", "spacy>=3.8.7,<3.9", "librosa>=0.11,<1", "soundfile",
     "opencc-python-reimplemented")
 log("installed")
 
