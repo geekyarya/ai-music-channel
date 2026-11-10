@@ -24,7 +24,7 @@ on:
       backend:
         description: "Force a music engine"
         type: choice
-        options: ["auto", "ace_step", "local"]
+        options: ["auto", "kaggle", "ace_step", "local"]
         default: "auto"
       upload:
         description: "Upload to YouTube"
