@@ -19,24 +19,30 @@ def have_credentials() -> bool:
     return bool(t) and not t.startswith("IG")  # Instagram-login tokens can't post to Facebook
 
 
-def _page(ver: str, token: str) -> tuple[str, str, str]:
-    """(page_id, page_token, name): works with a Page token or a user token that manages the Page."""
+def _page(ver: str, token: str, cfg: dict) -> tuple[str, str, str]:
+    """(page_id, page_token, name) for the Page named in facebook.page_name. Never guesses: one token
+    can manage several Pages, and we must never post to the wrong one."""
+    want = (cfg.get("facebook", {}).get("page_name") or "").strip().lower()
+    if not want:
+        raise RuntimeError("Set facebook.page_name in config.yaml so we never post to the wrong Page")
     me = requests.get(f"{GRAPH}/{ver}/me", params={"fields": "id,name,instagram_business_account",
                                                     "access_token": token}, timeout=30).json()
-    if isinstance(me, dict) and "instagram_business_account" in me:  # it's already a Page token
-        return me["id"], token, me.get("name", "")
+    if isinstance(me, dict) and "instagram_business_account" in me:  # already a Page token
+        if me.get("name", "").strip().lower() == want:
+            return me["id"], token, me["name"]
+        raise RuntimeError(f"Token is for Page '{me.get('name')}', not '{cfg['facebook']['page_name']}'")
     pages = _check(requests.get(f"{GRAPH}/{ver}/me/accounts", params={
-        "fields": "id,name,access_token,instagram_business_account", "access_token": token}, timeout=30))
-    data = pages.get("data", [])
-    pick = next((p for p in data if p.get("instagram_business_account")), data[0] if data else None)
-    if not pick:
-        raise RuntimeError("No Facebook Page found for this token")
-    return pick["id"], pick["access_token"], pick.get("name", "")
+        "fields": "id,name,access_token", "access_token": token, "limit": 100}, timeout=30)).get("data", [])
+    for p in pages:
+        if p.get("name", "").strip().lower() == want:
+            return p["id"], p["access_token"], p["name"]
+    raise RuntimeError(f"Token can't reach Page '{cfg['facebook']['page_name']}' "
+                       f"(it can reach: {', '.join(p.get('name', '?') for p in pages) or 'none'})")
 
 
 def post_reel(video_path: str, description: str, cfg: dict) -> str:
     ver = cfg.get("instagram", {}).get("graph_version", "v23.0")
-    page_id, ptoken, name = _page(ver, _token())
+    page_id, ptoken, name = _page(ver, _token(), cfg)
 
     start = _check(requests.post(f"{GRAPH}/{ver}/{page_id}/video_reels", data={
         "upload_phase": "start", "access_token": ptoken}, timeout=60))

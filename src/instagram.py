@@ -42,32 +42,45 @@ def _base(token: str) -> str:
     return "https://graph.instagram.com" if token.startswith("IG") else GRAPH
 
 
-def resolve_user(ver: str, token: str) -> str:
-    """IG_USER_ID if given, else discover the Instagram professional account from the token."""
-    if _env("IG_USER_ID"):
-        return _env("IG_USER_ID")
+def _want(cfg: dict) -> str:
+    u = (cfg.get("instagram", {}).get("username") or "").lstrip("@").lower()
+    if not u:
+        raise RuntimeError("Set instagram.username in config.yaml so we never post to the wrong account")
+    return u
+
+
+def resolve_user(ver: str, token: str, cfg: dict) -> str:
+    """The Instagram account to post to. It MUST match instagram.username in config.yaml: one Meta token
+    can manage several Pages/accounts, and we must never post to the wrong one."""
+    want = _want(cfg)
     base = _base(token)
+    found = []
     if base != GRAPH:
         me = _check(requests.get(f"{base}/{ver}/me", params={"fields": "user_id,username",
                                                               "access_token": token}, timeout=30))
-        print(f"   Instagram account: @{me.get('username')}")
-        return str(me.get("user_id") or me["id"])
-    # Page token: the Page itself has the linked account
-    r = requests.get(f"{GRAPH}/{ver}/me", params={"fields": "name,instagram_business_account{id,username}",
-                                                   "access_token": token}, timeout=30).json()
-    if isinstance(r, dict) and r.get("instagram_business_account"):
-        ig = r["instagram_business_account"]
-        print(f"   Instagram account: @{ig.get('username')} (via Page {r.get('name')})")
-        return ig["id"]
-    # User token: look through the user's Pages
-    pages = _check(requests.get(f"{GRAPH}/{ver}/me/accounts", params={
-        "fields": "name,instagram_business_account{id,username}", "access_token": token}, timeout=30))
-    for p in pages.get("data", []):
-        if p.get("instagram_business_account"):
-            ig = p["instagram_business_account"]
-            print(f"   Instagram account: @{ig.get('username')} (via Page {p.get('name')})")
-            return ig["id"]
-    raise RuntimeError("No Instagram professional account linked to a Facebook Page was found for this token")
+        found.append(me.get("username"))
+        if (me.get("username") or "").lower() == want:
+            print(f"   Instagram account: @{me['username']}")
+            return str(me.get("user_id") or me["id"])
+    else:
+        r = requests.get(f"{GRAPH}/{ver}/me", params={"fields": "name,instagram_business_account{id,username}",
+                                                       "access_token": token}, timeout=30).json()
+        cands = [r] if isinstance(r, dict) and "instagram_business_account" in r else []
+        if not cands:  # user token: every Page it manages
+            cands = _check(requests.get(f"{GRAPH}/{ver}/me/accounts", params={
+                "fields": "name,instagram_business_account{id,username}", "access_token": token,
+                "limit": 100}, timeout=30)).get("data", [])
+        for p in cands:
+            ig = p.get("instagram_business_account") or {}
+            found.append(ig.get("username"))
+            if (ig.get("username") or "").lower() == want:
+                print(f"   Instagram account: @{ig['username']} (via Page {p.get('name')})")
+                if _env("IG_USER_ID") and _env("IG_USER_ID") != ig["id"]:
+                    raise RuntimeError("IG_USER_ID doesn't match @" + want)
+                return ig["id"]
+    raise RuntimeError(f"This token has no access to @{want} (it can reach: "
+                       f"{', '.join('@' + f for f in found if f) or 'no Instagram accounts'}). "
+                       "Regenerate the token and tick the Neon Ghost Radio Page + Instagram account.")
 
 
 def _warn_expiry(ver: str, token: str) -> None:
@@ -131,7 +144,7 @@ def _post_reel(video_path: str, caption: str, cfg: dict) -> str:
     ver = cfg.get("instagram", {}).get("graph_version", "v23.0")
     token = _token()
     _warn_expiry(ver, token)
-    ig_user = resolve_user(ver, token)
+    ig_user = resolve_user(ver, token, cfg)
     G = _base(token)
 
     # 1. container

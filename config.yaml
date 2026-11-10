@@ -95,12 +95,14 @@ reels:
   youtube_shorts: true        # also upload the clip as a YouTube Short
 
 instagram:
-  enabled: true               # needs IG_USER_ID + IG_ACCESS_TOKEN secrets (see branding/INSTAGRAM_SETUP.md)
+  enabled: true
+  username: "neonghost.radio"   # ONLY this account is ever posted to (the token may reach others)               # needs IG_USER_ID + IG_ACCESS_TOKEN secrets (see branding/INSTAGRAM_SETUP.md)
   graph_version: "v23.0"
   hashtags: ["#newmusic", "#reels", "#music", "#song", "#lyrics", "#musicreels"]
 
 facebook:
-  enabled: true               # posts the reel to the Facebook Page too (token needs pages_manage_posts)
+  enabled: true
+  page_name: "Neon Ghost Radio" # ONLY this Page is ever posted to               # posts the reel to the Facebook Page too (token needs pages_manage_posts)
 
 youtube:
   privacy: "public"           # public | unlisted | private
