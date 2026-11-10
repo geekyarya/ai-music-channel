@@ -50,7 +50,12 @@ song:
 music:
   # Only ACE-Step for uploads: the "local" engine (synth beat + TTS voice) is test-quality and must
   # never be published. If ACE-Step can't make a song, that slot is skipped. Use --backend local to test.
-  backends: ["ace_step"]
+  #   kaggle    → ACE-Step on a free Kaggle GPU (~30 GPU-h/week; KAGGLE_USERNAME + KAGGLE_KEY secrets)
+  #   ace_step  → ACE-Step on Hugging Face's free ZeroGPU Space (small daily allowance)
+  backends: ["kaggle", "ace_step"]
+  kaggle:
+    kernel_slug: "ngr-ace-step"     # private notebook created in your Kaggle account
+    timeout_minutes: 50
   ace_step:
     spaces: ["ACE-Step/ACE-Step"]   # add duplicates/alternatives here
     infer_steps: 60

@@ -91,7 +91,7 @@ def main():
     ap.add_argument("--genre", help="force a genre for this run")
     ap.add_argument("--language", help="force a language: en | hi | hinglish")
     ap.add_argument("--type", choices=["rap", "sung"], help="force rap or a sung song")
-    ap.add_argument("--backend", choices=["ace_step", "local"], help="force a music backend")
+    ap.add_argument("--backend", choices=["kaggle", "ace_step", "local"], help="force a music backend")
     ap.add_argument("--offline", action="store_true", help="skip the LLM (built-in test lyrics)")
     ap.add_argument("--no-upload", action="store_true")
     ap.add_argument("--seconds", type=float, help="truncate video length (for quick tests)")

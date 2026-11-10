@@ -15,6 +15,20 @@ import subprocess
 from songwriter import lyrics_text
 
 
+def build_inputs(spec: dict, cfg: dict) -> tuple[str, str]:
+    """ACE-Step style prompt + section-tagged lyrics (shared by the HF Space and Kaggle backends)."""
+    a = cfg["music"]["ace_step"]
+    lang = spec.get("language", "en")
+    vocal = {"hi": f"hindi {spec['vocal']} vocals", "hinglish": f"hindi and english {spec['vocal']} vocals"} \
+        .get(lang, f"{spec['vocal']} vocals")
+    import re
+    tags = re.sub(r"\b(male|female|man|woman|girl|boy)\s+(vocals?|voice|singer)\s*,?\s*", "", spec["music_tags"],
+                  flags=re.I).strip(" ,")  # the song's own vocal choice wins over genre defaults
+    prompt = f"{tags}, {vocal}, {spec['bpm']} BPM, {spec['mood']}"
+    script = "native" if lang != "en" and a.get("hindi_script", "roman") == "devanagari" else "display"
+    return prompt, lyrics_text(spec, script)
+
+
 def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
     """Try ACE-Step; if the free ZeroGPU quota is temporarily used up, wait for it to refill and retry."""
     import re
@@ -48,11 +62,7 @@ def _generate_once(spec: dict, cfg: dict, out_dir: str) -> dict:
         raise RuntimeError("HF_TOKEN not set — ACE-Step needs a (free) Hugging Face token")
 
     a = cfg["music"]["ace_step"]
-    lang = spec.get("language", "en")
-    vocal = {"hi": f"hindi {spec['vocal']} vocals", "hinglish": f"hindi and english {spec['vocal']} vocals"} \
-        .get(lang, f"{spec['vocal']} vocals")
-    prompt = f"{spec['music_tags']}, {vocal}, {spec['bpm']} BPM, {spec['mood']}"
-    script = "native" if lang != "en" and a.get("hindi_script", "roman") == "devanagari" else "display"
+    prompt, lyrics = build_inputs(spec, cfg)
     errors = []
     for space in a["spaces"]:
         try:
@@ -61,7 +71,7 @@ def _generate_once(spec: dict, cfg: dict, out_dir: str) -> dict:
             result = client.predict(
                 audio_duration=float(cfg["song"]["duration_seconds"]),
                 prompt=prompt,
-                lyrics=lyrics_text(spec, script),
+                lyrics=lyrics,
                 infer_step=int(a.get("infer_steps", 60)),
                 guidance_scale=float(a.get("guidance_scale", 15.0)),
                 scheduler_type="euler",

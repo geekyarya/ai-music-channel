@@ -12,7 +12,7 @@ Three times a day (10:07 AM, 3:07 PM, 8:07 PM India time), GitHub Actions:
 | Piece | Free service | Cost |
 |---|---|---|
 | Lyrics / ideas | Google Gemini free tier (`GEMINI_API_KEY`), with Groq or GitHub Models as fallbacks | $0 |
-| Singing + music | ACE-Step on Hugging Face ZeroGPU (free account) | $0 |
+| Singing + music | ACE-Step on a free Kaggle GPU (Hugging Face ZeroGPU as backup) | $0 |
 | Fallback music | Beat synthesized on the runner + Edge neural TTS rap (espeak-ng as backup) | $0 |
 | Lyric timing | faster-whisper on CPU | $0 |
 | Video | numpy + Pillow + ffmpeg on the runner | $0 |
@@ -35,6 +35,15 @@ Push this folder to a **public** GitHub repo. Public repos get unlimited Actions
 1. Sign up at <https://huggingface.co> (free).
 2. Go to Settings → Access Tokens → **New token** (type: *Read*).
 3. In GitHub, go to repo → Settings → Secrets and variables → Actions → **New repository secret**: `HF_TOKEN`.
+
+### 2b. Kaggle key (free GPU for the singing — recommended)
+Hugging Face's free GPU allowance is small, so songs are generated on a free **Kaggle** GPU first
+(about 30 GPU-hours per week; each song uses ~15 minutes including setup).
+1. Sign up at <https://www.kaggle.com> and **verify your phone number** (Settings → Phone verification);
+   Kaggle only allows GPU + internet in notebooks for verified accounts.
+2. **Settings → API → Create New Token**, which downloads `kaggle.json`.
+3. Add two secrets from that file: `KAGGLE_USERNAME` and `KAGGLE_KEY`.
+The pipeline creates a private notebook called `ngr-ace-step` in your Kaggle account and runs it for each song.
 
 ### 3. YouTube upload access
 1. Create the channel on YouTube.

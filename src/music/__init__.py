@@ -10,6 +10,13 @@ def make_song(spec: dict, cfg: dict, out_dir: str, only: str | None = None) -> d
     for name in backends:
         try:
             print(f"♪ music backend: {name}")
+            if name == "kaggle":
+                from music import kaggle_gpu
+                res = kaggle_gpu.generate(spec, cfg, out_dir)
+                if cfg["video"].get("lyrics_captions", True):
+                    from music.align import align_lyrics
+                    res["timings"] = align_lyrics(res["audio"], spec)
+                return res
             if name == "ace_step":
                 from music import ace_step
                 res = ace_step.generate(spec, cfg, out_dir)
