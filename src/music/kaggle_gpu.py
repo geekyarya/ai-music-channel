@@ -95,8 +95,8 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
         if "complete" not in status or not os.path.exists(song):
             logs = sorted(glob.glob(os.path.join(dl, "*.log")))
             tail = ""
-            if logs:
-                raw = open(logs[0], errors="replace").read()
+            raw = open(logs[0], errors="replace").read() if logs else _kaggle("kernels", "logs", kid, check=False)
+            if raw:
                 try:  # Kaggle logs are a JSON list of {stream_name, data}
                     raw = "".join(e.get("data", "") for e in json.loads(raw))
                 except Exception:  # noqa: BLE001

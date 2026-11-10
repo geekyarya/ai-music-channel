@@ -19,13 +19,35 @@ def log(msg):
     print(f"[{time.time() - t0:6.0f}s] {msg}", flush=True)
 
 
+def pip(*args):
+    p = subprocess.run([sys.executable, "-m", "pip", "install", "-q", "--no-input", *args],
+                       capture_output=True, text=True)
+    if p.returncode != 0:
+        print(p.stdout[-2000:], p.stderr[-3000:], flush=True)
+        raise SystemExit(f"pip install failed: {args}")
+
+
+# ACE-Step pins exact old versions (e.g. spacy==3.8.4) that don't exist for Kaggle's Python 3.13, so install
+# it without its pins and add the packages its singing path actually imports, at versions tested on 3.13.
 log("installing ACE-Step…")
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "--no-input",
-                "git+https://github.com/ace-step/ACE-Step.git"], check=True)
+pip("--no-deps", "git+https://github.com/ace-step/ACE-Step.git")
+pip("diffusers==0.33.1", "transformers==4.50.0", "accelerate==1.6.0", "peft", "loguru", "pypinyin",
+    "hangul-romanize", "num2words", "py3langid", "spacy>=3.8.7,<3.9", "librosa>=0.11,<1", "soundfile",
+    "opencc-python-reimplemented")
+log("installed")
 
 import numpy as np  # noqa: E402
 import soundfile as sf  # noqa: E402
 import torch  # noqa: E402
+import torchaudio  # noqa: E402
+
+
+# New torchaudio can't save without TorchCodec; ACE-Step calls torchaudio.save(..., backend="soundfile").
+def _save(path, src, sample_rate=48000, format="wav", backend=None, **kw):  # noqa: A002
+    sf.write(path, src.detach().cpu().float().numpy().T, sample_rate)
+
+
+torchaudio.save = _save
 
 gpu = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU"
 major = torch.cuda.get_device_capability(0)[0] if torch.cuda.is_available() else 0
