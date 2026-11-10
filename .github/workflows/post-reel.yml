@@ -26,7 +26,7 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write   # temporary release file if Instagram needs a public URL
   actions: read
 
 jobs:
@@ -64,6 +64,7 @@ jobs:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IN_IG: ${{ inputs.instagram }}
           IN_FB: ${{ inputs.facebook }}
           IN_YTV: ${{ inputs.youtube_video }}

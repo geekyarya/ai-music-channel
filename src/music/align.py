@@ -69,7 +69,7 @@ def align_lyrics(audio_path: str, spec: dict, min_coverage: float = 0.45):
     coverage = len(found) / max(1, len(lines))
     print(f"  aligned {len(found)}/{len(lines)} lines ({coverage:.0%})")
     if hindi:
-        min_coverage = min(min_coverage, 0.25)  # Whisper is weaker on sung Hindi; we interpolate the rest
+        min_coverage = min(min_coverage, 0.15)  # Whisper is weaker on sung Hindi; we interpolate the rest
     if coverage < min_coverage:
         return None
 

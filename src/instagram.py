@@ -129,36 +129,81 @@ def ig_safe_copy(video_path: str) -> str:
     return out
 
 
+def _processing_failed(e: Exception) -> bool:
+    return "ProcessingFailed" in str(e) or "processing failed" in str(e).lower()
+
+
 def post_reel(video_path: str, caption: str, cfg: dict) -> str:
+    """Direct (resumable) upload first; if Instagram can't process it, re-encode; if that fails too,
+    host the file briefly as a public GitHub release asset and let Instagram fetch it by URL."""
     try:
         return _post_reel(video_path, caption, cfg)
     except RuntimeError as e:
-        if "ProcessingFailed" not in str(e) and "processing failed" not in str(e).lower():
+        if not _processing_failed(e):
             raise
-        print("   Instagram couldn't process this encode; retrying with Instagram's recommended settings…")
-        time.sleep(20)
-        return _post_reel(ig_safe_copy(video_path), caption, cfg)
+    print("   Instagram couldn't process the upload; retrying with Instagram's recommended settings…")
+    safe = ig_safe_copy(video_path)
+    time.sleep(20)
+    try:
+        return _post_reel(safe, caption, cfg)
+    except RuntimeError as e:
+        if not _processing_failed(e) or not os.environ.get("GITHUB_REPOSITORY"):
+            raise
+    print("   Direct upload still failing; posting via a temporary public link instead…")
+    with _hosted(safe) as url:
+        return _post_reel(safe, caption, cfg, video_url=url)
 
 
-def _post_reel(video_path: str, caption: str, cfg: dict) -> str:
+class _hosted:
+    """Upload a file as a temporary GitHub release asset (public repo) and delete it afterwards."""
+
+    def __init__(self, path: str):
+        self.path = path
+        self.tag = f"reel-tmp-{os.environ.get('GITHUB_RUN_ID', int(time.time()))}-{int(time.time())}"
+
+    def _gh(self, *args):
+        import subprocess
+        env = dict(os.environ, GH_TOKEN=os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN", ""))
+        return subprocess.run(["gh", *args, "--repo", os.environ["GITHUB_REPOSITORY"]], env=env,
+                               capture_output=True, text=True)
+
+    def __enter__(self) -> str:
+        name = f"{self.tag}.mp4"
+        import shutil
+        tmp = os.path.join(os.path.dirname(self.path), name)
+        shutil.copy(self.path, tmp)
+        p = self._gh("release", "create", self.tag, tmp, "--prerelease", "--title", "temp reel",
+                     "--notes", "Temporary file for Instagram; deleted automatically.")
+        if p.returncode != 0:
+            raise RuntimeError(f"couldn't host the reel on GitHub: {p.stderr.strip()[-300:]}")
+        return f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/releases/download/{self.tag}/{name}"
+
+    def __exit__(self, *exc):
+        self._gh("release", "delete", self.tag, "--cleanup-tag", "--yes")
+        return False
+
+
+def _post_reel(video_path: str, caption: str, cfg: dict, video_url: str | None = None) -> str:
     ver = cfg.get("instagram", {}).get("graph_version", "v23.0")
     token = _token()
     _warn_expiry(ver, token)
     ig_user = resolve_user(ver, token, cfg)
     G = _base(token)
 
-    # 1. container
-    c = _check(requests.post(f"{G}/{ver}/{ig_user}/media", data={
-        "media_type": "REELS", "upload_type": "resumable", "caption": caption[:2200],
-        "share_to_feed": "true", "access_token": token}, timeout=60))
+    # 1. container (+ 2. bytes, unless Instagram fetches the file from a public URL)
+    data = {"media_type": "REELS", "caption": caption[:2200], "share_to_feed": "true", "access_token": token}
+    if video_url:
+        data["video_url"] = video_url
+    else:
+        data["upload_type"] = "resumable"
+    c = _check(requests.post(f"{G}/{ver}/{ig_user}/media", data=data, timeout=60))
     cid = c["id"]
-    upload_uri = c.get("uri") or f"https://rupload.facebook.com/ig-api-upload/{ver}/{cid}"
-
-    # 2. bytes
-    size = os.path.getsize(video_path)
-    with open(video_path, "rb") as fh:
-        _check(requests.post(upload_uri, data=fh, timeout=600, headers={
-            "Authorization": f"OAuth {token}", "offset": "0", "file_size": str(size)}))
+    if not video_url:
+        upload_uri = c.get("uri") or f"https://rupload.facebook.com/ig-api-upload/{ver}/{cid}"
+        size = os.path.getsize(video_path)
+        with open(video_path, "rb") as fh:
+            _check(requests.post(upload_uri, data=fh, timeout=600, headers={
+                "Authorization": f"OAuth {token}", "offset": "0", "file_size": str(size)}))
 
     # 3. wait for processing
     for _ in range(60):
