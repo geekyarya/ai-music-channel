@@ -75,10 +75,10 @@ music:
 # If none work, a built-in song is used so the daily upload still happens.
 llm:
   providers:
+    - { name: groq,   model: "openai/gpt-oss-120b" }       # auto-switches if Groq retires it
     - { name: gemini, model: "gemini-3.8-flash" }
     - { name: gemini, model: "gemini-flash-lite-latest" }   # separate daily quota, faster
     - { name: gemini, model: "gemini-flash-latest" }
-    - { name: groq,   model: "llama-3.3-70b-versatile" }
     - { name: github, model: "openai/gpt-4.1" }
 
 video:

@@ -74,6 +74,8 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
             status = (m.group(1) if m else out.strip()).lower()
             if any(s in status for s in ("complete", "error", "cancel")):
                 break
+            if any(s in status for s in ("denied", "not found", "401", "403")):
+                raise RuntimeError(f"Kaggle refused the status check: {out.strip()[-300:]}")
             time.sleep(30)
         print(f"   Kaggle status: {status or 'timeout'}")
 

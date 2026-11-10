@@ -24,6 +24,28 @@ class LLMError(RuntimeError):
     pass
 
 
+# When a configured model is retired (404), pick the best one the provider currently offers.
+PREFERRED = {
+    "groq": ["openai/gpt-oss-120b", "moonshotai/kimi-k2-instruct", "llama-3.3-70b-versatile",
+             "meta-llama/llama-4-maverick-17b-128e-instruct", "qwen/qwen3-32b", "openai/gpt-oss-20b",
+             "llama-3.1-8b-instant"],
+}
+
+
+def _pick_model(provider: str, key: str) -> str | None:
+    url = ENDPOINTS[provider][0].replace("/chat/completions", "/models")
+    try:
+        ids = [m["id"] for m in requests.get(url, headers={"Authorization": f"Bearer {key}"}, timeout=30)
+               .json().get("data", [])]
+    except Exception:  # noqa: BLE001
+        return None
+    for m in PREFERRED.get(provider, []):
+        if m in ids:
+            return m
+    chat = [i for i in ids if not re.search(r"whisper|guard|tts|embed|vision|audio|playai", i, re.I)]
+    return chat[0] if chat else None
+
+
 def chat_json(providers: list[dict], system: str, user: str, temperature: float = 1.0) -> dict:
     """Ask each provider in turn for a JSON object; return the first valid one."""
     errors = []
@@ -64,6 +86,13 @@ def chat_json(providers: list[dict], system: str, user: str, temperature: float 
                 msg = f"{p['name']}/{p['model']} try {attempt + 1}: {type(e).__name__}: {e}{detail}"
                 print("  ! " + msg)
                 errors.append(msg)
+                if r is not None and r.status_code == 404 and "model" in r.text.lower() \
+                        and not p.get("_auto"):
+                    alt = _pick_model(p["name"], key)
+                    if alt and alt != p["model"]:
+                        print(f"    model {p['model']} is gone; switching to {alt}")
+                        p = {**p, "model": alt, "_auto": True}
+                        continue
                 if r is not None and r.status_code in (401, 403, 404):
                     break  # auth/model problem: retrying won't help
                 if r is not None and r.status_code == 429:

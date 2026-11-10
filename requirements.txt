@@ -9,3 +9,4 @@ faster-whisper>=1.1
 google-api-python-client>=2.130
 google-auth>=2.29
 kaggle>=1.6
+six                # kaggle 2.2.x imports it but doesn't declare it
