@@ -104,5 +104,17 @@
     "video_id": "K9RKk_TL758",
     "short_id": "SFINK4JNfMY",
     "instagram": null
+  },
+  {
+    "date": "2026-11-11",
+    "title": "Deep Tide Drip",
+    "genre": "drill",
+    "language": "en",
+    "type": "rap",
+    "theme": "Riding unseen oceanic depths as a metaphor for relentless ambition",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "0KiOyTK1phQ",
+    "short_id": "H981Px0PTLY",
+    "instagram": null
   }
 ]
