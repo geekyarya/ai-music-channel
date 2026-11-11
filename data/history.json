@@ -128,5 +128,17 @@
     "video_id": "enqUMKRWd7k",
     "short_id": "UsxnvMrRijE",
     "instagram": null
+  },
+  {
+    "date": "2026-11-11",
+    "title": "Toota Saaz",
+    "genre": "rock",
+    "language": "hi",
+    "type": "sung",
+    "theme": "Coping with a first heartbreak and finding inner fire",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "yWgHr5remmE",
+    "short_id": "aKbEo6nqKVE",
+    "instagram": null
   }
 ]
