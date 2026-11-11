@@ -116,5 +116,17 @@
     "video_id": "0KiOyTK1phQ",
     "short_id": "H981Px0PTLY",
     "instagram": null
+  },
+  {
+    "date": "2026-11-11",
+    "title": "Rooftop Ignite",
+    "genre": "trap",
+    "language": "en",
+    "type": "rap",
+    "theme": "A night of rooftop Diwali lights fuels a relentless trap flow.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "enqUMKRWd7k",
+    "short_id": "UsxnvMrRijE",
+    "instagram": null
   }
 ]
