@@ -152,5 +152,17 @@
     "video_id": "oQiHDz1ufrs",
     "short_id": "lT9jvJuGGKo",
     "instagram": null
+  },
+  {
+    "date": "2026-11-12",
+    "title": "Rooftop Ka Rhythm",
+    "genre": "gully rap",
+    "language": "hi",
+    "type": "rap",
+    "theme": "A secret rooftop becomes the crew's underground studio where beats and dreams collide.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "COL4KZ9q1yE",
+    "short_id": "JFHpwjbKifE",
+    "instagram": null
   }
 ]
