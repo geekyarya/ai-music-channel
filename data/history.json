@@ -140,5 +140,17 @@
     "video_id": "yWgHr5remmE",
     "short_id": "aKbEo6nqKVE",
     "instagram": null
+  },
+  {
+    "date": "2026-11-12",
+    "title": "Rhythm of Goodbye",
+    "genre": "afrobeats",
+    "language": "en",
+    "type": "sung",
+    "theme": "Dancing through the sting of a first heartbreak",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "oQiHDz1ufrs",
+    "short_id": "lT9jvJuGGKo",
+    "instagram": null
   }
 ]
