@@ -176,5 +176,17 @@
     "video_id": "_Oh7CjrnmhE",
     "short_id": "5cuEiuPelxo",
     "instagram": null
+  },
+  {
+    "date": "2026-11-13",
+    "title": "Tin Roof Riddim",
+    "genre": "hip hop",
+    "language": "en",
+    "type": "rap",
+    "theme": "Turning a rainy night on a tin roof into a relentless creative flow.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "igunknAa1Lk",
+    "short_id": "3CRXRyKMERE",
+    "instagram": null
   }
 ]
