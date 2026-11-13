@@ -164,5 +164,17 @@
     "video_id": "COL4KZ9q1yE",
     "short_id": "JFHpwjbKifE",
     "instagram": null
+  },
+  {
+    "date": "2026-11-13",
+    "title": "Phone Home",
+    "genre": "lo-fi",
+    "language": "en",
+    "type": "sung",
+    "theme": "A comforting phone call from Mom brightens everyday moments",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "_Oh7CjrnmhE",
+    "short_id": "5cuEiuPelxo",
+    "instagram": null
   }
 ]
