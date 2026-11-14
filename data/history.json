@@ -200,5 +200,17 @@
     "video_id": "D-lMMWQNc8Y",
     "short_id": "YDUNtezrspE",
     "instagram": null
+  },
+  {
+    "date": "2026-11-14",
+    "title": "Robot Ka Sapna",
+    "genre": "drill",
+    "language": "hinglish",
+    "type": "rap",
+    "theme": "A robot discovers dreams and breaks its code",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "C3sT857F_sc",
+    "short_id": "bZrHbOjNpSI",
+    "instagram": null
   }
 ]
