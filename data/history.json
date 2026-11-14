@@ -188,5 +188,17 @@
     "video_id": "igunknAa1Lk",
     "short_id": "3CRXRyKMERE",
     "instagram": null
+  },
+  {
+    "date": "2026-11-14",
+    "title": "Grind Groove",
+    "genre": "r&b",
+    "language": "hinglish",
+    "type": "sung",
+    "theme": "The hustle and hope before success",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "D-lMMWQNc8Y",
+    "short_id": "YDUNtezrspE",
+    "instagram": null
   }
 ]
