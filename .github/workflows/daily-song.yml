@@ -42,7 +42,7 @@ concurrency:
 jobs:
   make-and-post:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
 

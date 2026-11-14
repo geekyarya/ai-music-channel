@@ -66,15 +66,21 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
         print(f"  → ACE-Step on Kaggle GPU ({kid}): {prompt}")
         quota = _kaggle("quota", check=False).strip()
         print("   Kaggle quota: " + " | ".join(l.strip() for l in quota.splitlines() if l.strip())[:300])
-        timeout_s = int(float(k.get("timeout_minutes", 50)) * 60)
-        pushed = _kaggle("kernels", "push", "-p", work, "--accelerator", k.get("accelerator", "NvidiaTeslaT4"),
-                         "-t", str(timeout_s)).strip()
-        print("   " + " | ".join(pushed.splitlines()[-3:]))
-        if "error" in pushed.lower():
-            raise RuntimeError(f"Kaggle rejected the notebook: {pushed[-400:]}. Check that your Kaggle phone "
-                               "number is verified (kaggle.com → Settings → Account) and see 'Check Kaggle'.")
+        timeout_s = int(float(k.get("timeout_minutes", 80)) * 60)
 
-        deadline = time.time() + float(k.get("timeout_minutes", 50)) * 60
+        def push():
+            out = _kaggle("kernels", "push", "-p", work, "--accelerator", k.get("accelerator", "NvidiaTeslaT4"),
+                          "-t", str(timeout_s)).strip()
+            print("   " + " | ".join(out.splitlines()[-3:]))
+            if "error" in out.lower():
+                raise RuntimeError(f"Kaggle rejected the notebook: {out[-400:]}. Check that your Kaggle phone "
+                                   "number is verified (kaggle.com → Settings → Account) and see 'Check Kaggle'.")
+
+        push()
+
+        deadline = time.time() + timeout_s
+        requeue_after = float(k.get("requeue_after_minutes", 20)) * 60
+        queued_since, repushed = time.time(), 0
         status = ""
         time.sleep(30)
         while time.time() < deadline:
@@ -85,6 +91,14 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
                 break
             if any(s in status for s in ("denied", "not found", "401", "403")):
                 raise RuntimeError(f"Kaggle refused the status check: {out.strip()[-300:]}")
+            if "queued" in status:
+                if time.time() - queued_since > requeue_after and repushed < 2:
+                    repushed += 1
+                    print(f"   still queued after {requeue_after / 60:.0f} min; pushing again ({repushed}/2)…")
+                    push()
+                    queued_since = time.time()
+            else:
+                queued_since = time.time()  # running: reset the queue timer
             time.sleep(30)
         print(f"   Kaggle status: {status or 'timeout'}")
 
