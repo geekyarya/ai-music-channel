@@ -248,5 +248,17 @@
     "video_id": "FRJqg9mWIqo",
     "short_id": "jsGbRK2p6xw",
     "instagram": null
+  },
+  {
+    "date": "2026-11-15",
+    "title": "Neon Paani",
+    "genre": "trap",
+    "language": "hi",
+    "type": "rap",
+    "theme": "Chasing neon reflections in rain-soaked streets while grinding on the grind.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "vd8ip501UdQ",
+    "short_id": "s_i8Ygs1jq8",
+    "instagram": null
   }
 ]
