@@ -236,5 +236,17 @@
     "video_id": "nvlQsPMcmBQ",
     "short_id": "FwomGFFJS-g",
     "instagram": null
+  },
+  {
+    "date": "2026-11-15",
+    "title": "Samandar Dekha Nahi",
+    "genre": "gully rap",
+    "language": "hinglish",
+    "type": "rap",
+    "theme": "A street lyricist trapped in narrow concrete alleys dreams of boundless horizons and chasing an ocean he has only ever imagined.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "FRJqg9mWIqo",
+    "short_id": "jsGbRK2p6xw",
+    "instagram": null
   }
 ]
