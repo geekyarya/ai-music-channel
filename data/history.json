@@ -212,5 +212,17 @@
     "video_id": "C3sT857F_sc",
     "short_id": "bZrHbOjNpSI",
     "instagram": null
+  },
+  {
+    "date": "2026-11-15",
+    "title": "Rooftop Glow",
+    "genre": "country",
+    "language": "en",
+    "type": "sung",
+    "theme": "Finding joy and connection under Diwali lights on a rooftop",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "Z9CnQ0zLK6c",
+    "short_id": "uff5RLcFfF4",
+    "instagram": null
   }
 ]
