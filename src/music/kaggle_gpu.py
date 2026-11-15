@@ -68,14 +68,32 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
         print("   Kaggle quota: " + " | ".join(l.strip() for l in quota.splitlines() if l.strip())[:300])
         timeout_s = int(float(k.get("timeout_minutes", 80)) * 60)
 
-        def push():
+        def status_now() -> str:
+            out = _kaggle("kernels", "status", kid, check=False)
+            m = re.search(r'status "([^"]+)"', out)
+            return (m.group(1) if m else out.strip()).lower()
+
+        def clear():
+            """Delete the notebook: this ends any queued/running sessions it has (the CLI has no cancel).
+            Kaggle allows only 2 batch GPU sessions, so stale queued ones block new runs."""
+            print("   clearing old Kaggle sessions (deleting the notebook)…")
+            _kaggle("kernels", "delete", kid, "-y", check=False)
+            time.sleep(15)
+
+        def push(retry_on_limit=True):
             out = _kaggle("kernels", "push", "-p", work, "--accelerator", k.get("accelerator", "NvidiaTeslaT4"),
                           "-t", str(timeout_s)).strip()
             print("   " + " | ".join(out.splitlines()[-3:]))
             if "error" in out.lower():
+                if retry_on_limit and "session count" in out.lower():
+                    clear()
+                    return push(retry_on_limit=False)
                 raise RuntimeError(f"Kaggle rejected the notebook: {out[-400:]}. Check that your Kaggle phone "
                                    "number is verified (kaggle.com → Settings → Account) and see 'Check Kaggle'.")
 
+        # Runs never overlap (workflow concurrency group), so an active session now is a stale leftover.
+        if any(x in status_now() for x in ("queued", "running")):
+            clear()
         push()
 
         deadline = time.time() + timeout_s
@@ -94,7 +112,9 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
             if "queued" in status:
                 if time.time() - queued_since > requeue_after and repushed < 2:
                     repushed += 1
-                    print(f"   still queued after {requeue_after / 60:.0f} min; pushing again ({repushed}/2)…")
+                    print(f"   still queued after {requeue_after / 60:.0f} min; clearing and pushing again "
+                          f"({repushed}/2)…")
+                    clear()
                     push()
                     queued_since = time.time()
             else:
