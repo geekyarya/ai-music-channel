@@ -224,5 +224,17 @@
     "video_id": "Z9CnQ0zLK6c",
     "short_id": "uff5RLcFfF4",
     "instagram": null
+  },
+  {
+    "date": "2026-11-15",
+    "title": "Last Summer Pulse",
+    "genre": "edm",
+    "language": "en",
+    "type": "sung",
+    "theme": "Turning the fleeting feeling of a summer that ended too soon into an unstoppable EDM anthem.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "nvlQsPMcmBQ",
+    "short_id": "FwomGFFJS-g",
+    "instagram": null
   }
 ]
