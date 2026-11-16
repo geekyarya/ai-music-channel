@@ -284,5 +284,17 @@
     "video_id": "OGhPAuQeNog",
     "short_id": "ge152B_Tuls",
     "instagram": null
+  },
+  {
+    "date": "2026-11-16",
+    "title": "Last Train Vibes",
+    "genre": "hip hop",
+    "language": "hi",
+    "type": "rap",
+    "theme": "Chasing dreams on the midnight train before sunrise",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "a9LgSgUXF8k",
+    "short_id": "gQOHM6e4bVc",
+    "instagram": null
   }
 ]
