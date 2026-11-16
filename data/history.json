@@ -272,5 +272,17 @@
     "video_id": "NtW-q5ayCxs",
     "short_id": "t06oyLse_T0",
     "instagram": null
+  },
+  {
+    "date": "2026-11-16",
+    "title": "Nayi Raah",
+    "genre": "r&b",
+    "language": "hi",
+    "type": "sung",
+    "theme": "Escaping past shadows to find a fresh path",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "OGhPAuQeNog",
+    "short_id": "ge152B_Tuls",
+    "instagram": null
   }
 ]
