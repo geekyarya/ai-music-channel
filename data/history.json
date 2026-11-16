@@ -260,5 +260,17 @@
     "video_id": "vd8ip501UdQ",
     "short_id": "s_i8Ygs1jq8",
     "instagram": null
+  },
+  {
+    "date": "2026-11-16",
+    "title": "Sunrise Saath",
+    "genre": "bollywood romantic",
+    "language": "hinglish",
+    "type": "sung",
+    "theme": "A romantic sunrise festival celebrating love together",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "NtW-q5ayCxs",
+    "short_id": "t06oyLse_T0",
+    "instagram": null
   }
 ]
