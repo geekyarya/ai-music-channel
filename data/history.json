@@ -296,5 +296,17 @@
     "video_id": "a9LgSgUXF8k",
     "short_id": "gQOHM6e4bVc",
     "instagram": null
+  },
+  {
+    "date": "2026-11-16",
+    "title": "Stormbound Exit",
+    "genre": "drill",
+    "language": "en",
+    "type": "rap",
+    "theme": "Leaving home to chase new horizons and confront the unknown",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "M1FPMfc6_5Q",
+    "short_id": "Gi74djkL35A",
+    "instagram": null
   }
 ]
