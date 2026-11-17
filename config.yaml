@@ -56,8 +56,9 @@ music:
   kaggle:
     kernel_slug: "ngr-ace-step"     # private notebook created in your Kaggle account
     accelerator: "NvidiaTeslaT4"    # Kaggle's free GPU (T4 x2)
-    timeout_minutes: 80             # total wait for Kaggle (queue + run)
-    requeue_after_minutes: 20       # push again if Kaggle leaves it queued this long (max 2 times)
+    timeout_minutes: 100            # total wait for Kaggle (queue + run); GPU queues can take 30+ min
+    requeue_after_minutes: 45       # if still queued this long, clear and push again…
+    max_requeues: 1                 # …at most once (re-pushing sends us to the back of the queue)
   ace_step:
     spaces: ["ACE-Step/ACE-Step"]   # add duplicates/alternatives here
     infer_steps: 60

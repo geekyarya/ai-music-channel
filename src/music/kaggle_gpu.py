@@ -110,10 +110,11 @@ def generate(spec: dict, cfg: dict, out_dir: str) -> dict:
             if any(s in status for s in ("denied", "not found", "401", "403")):
                 raise RuntimeError(f"Kaggle refused the status check: {out.strip()[-300:]}")
             if "queued" in status:
-                if time.time() - queued_since > requeue_after and repushed < 2:
+                max_requeues = int(k.get("max_requeues", 1))
+                if time.time() - queued_since > requeue_after and repushed < max_requeues:
                     repushed += 1
                     print(f"   still queued after {requeue_after / 60:.0f} min; clearing and pushing again "
-                          f"({repushed}/2)…")
+                          f"({repushed}/{max_requeues})…")
                     clear()
                     push()
                     queued_since = time.time()
