@@ -332,5 +332,17 @@
     "video_id": "BMYAmpgnozY",
     "short_id": "TjnVbMVy7xc",
     "instagram": null
+  },
+  {
+    "date": "2026-11-17",
+    "title": "Neon Pulse",
+    "genre": "gully rap",
+    "language": "hinglish",
+    "type": "rap",
+    "theme": "The endless grind and neon dreams of a city that never sleeps",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "xt-tdBpnt1Q",
+    "short_id": "C5eabG3ffBs",
+    "instagram": null
   }
 ]
