@@ -344,5 +344,17 @@
     "video_id": "xt-tdBpnt1Q",
     "short_id": "C5eabG3ffBs",
     "instagram": null
+  },
+  {
+    "date": "2026-11-17",
+    "title": "Roof Se Top",
+    "genre": "desi hip hop",
+    "language": "hinglish",
+    "type": "rap",
+    "theme": "A high-energy rooftop rap about rising above the city noise during festival season.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "ENomXXq6Qsg",
+    "short_id": "PqUWQDDYp5M",
+    "instagram": null
   }
 ]
