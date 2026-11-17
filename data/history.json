@@ -320,5 +320,17 @@
     "video_id": "7UrZDbSYAAo",
     "short_id": "sDnmLHm3iME",
     "instagram": null
+  },
+  {
+    "date": "2026-11-17",
+    "title": "Midnight Chai Vibes",
+    "genre": "lo-fi",
+    "language": "en",
+    "type": "sung",
+    "theme": "Friends sharing late\u2011night chai and quiet moments together",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "BMYAmpgnozY",
+    "short_id": "TjnVbMVy7xc",
+    "instagram": null
   }
 ]
