@@ -356,5 +356,18 @@
     "video_id": "ENomXXq6Qsg",
     "short_id": "PqUWQDDYp5M",
     "instagram": null
+  },
+  {
+    "date": "2026-11-18",
+    "ts": "2026-11-18T10:48:21+00:00",
+    "title": "Neon Rain",
+    "genre": "synthwave",
+    "language": "hinglish",
+    "type": "sung",
+    "theme": "A nostalgic night of rain on a tin roof, evoking dreamy memories and hopeful vibes.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "N4WHa6DB8fI",
+    "short_id": "gVFkgFy_qpY",
+    "instagram": null
   }
 ]
