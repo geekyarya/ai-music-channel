@@ -369,5 +369,18 @@
     "video_id": "N4WHa6DB8fI",
     "short_id": "gVFkgFy_qpY",
     "instagram": null
+  },
+  {
+    "date": "2026-11-18",
+    "ts": "2026-11-18T15:53:57+00:00",
+    "title": "Anjaani Raah",
+    "genre": "bollywood dance",
+    "language": "hi",
+    "type": "sung",
+    "theme": "Falling in love with a stranger you meet on the street",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "xdievUqqrRk",
+    "short_id": "unuxV8qxukE",
+    "instagram": null
   }
 ]
