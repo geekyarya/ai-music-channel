@@ -86,6 +86,40 @@ def build_metadata(spec: dict, cfg: dict, engine: str) -> tuple[str, str, list[s
     return title, desc, tags
 
 
+def _since(entries: list[dict], start: dt.datetime) -> list[dict]:
+    out = []
+    for h in entries:
+        try:
+            if dt.datetime.fromisoformat(h["ts"].replace("Z", "+00:00")) >= start:
+                out.append(h)
+        except (KeyError, ValueError):
+            pass  # older entries have no timestamp
+    return out
+
+
+def should_skip(history: list[dict], cfg: dict) -> str | None:
+    """Avoid wasted runs. GitHub often starts scheduled runs hours late, after the backup starter has
+    already covered that slot, and YouTube allows ~6 uploads per Pacific-time day."""
+    from zoneinfo import ZoneInfo
+    now = dt.datetime.now(dt.timezone.utc)
+    # 1) quota guard: uploads since midnight America/Los_Angeles (YouTube's quota day)
+    pt = now.astimezone(ZoneInfo("America/Los_Angeles"))
+    quota_start = pt.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(dt.timezone.utc)
+    used = sum(bool(h.get("video_id")) + bool(h.get("short_id")) for h in _since(history, quota_start))
+    need = 1 + int(bool(cfg.get("reels", {}).get("enabled", True) and cfg["reels"].get("youtube_shorts", True)))
+    limit = int(cfg["youtube"].get("daily_upload_limit", 6))
+    if used + need > limit:
+        return f"YouTube's daily upload quota is used ({used}/{limit} uploads since midnight Pacific)"
+    # 2) slot guard (scheduled runs only): a song was already made since this slot's start time
+    if os.environ.get("GITHUB_EVENT_NAME") == "schedule":
+        slots = [dt.datetime.combine(now.date() - dt.timedelta(days=d), dt.time(h, m), dt.timezone.utc)
+                 for d in (0, 1) for h, m in cfg.get("schedule_slots_utc", [(4, 37), (9, 37), (14, 37)])]
+        slot = max(x for x in slots if x <= now)
+        if _since(history, slot):
+            return f"a song was already made for the {slot:%H:%M} UTC slot (this scheduled run started late)"
+    return None
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--genre", help="force a genre for this run")
@@ -100,6 +134,12 @@ def main():
     with open(os.path.join(ROOT, "config.yaml")) as fh:
         cfg = yaml.safe_load(fh)
     history = load_history()
+
+    if not args.no_upload:
+        reason = should_skip(history, cfg)
+        if reason:
+            print(f"::notice::Skipping this run: {reason}")
+            return
 
     print("✍️  writing song…")
     spec = write_song(cfg, history, args.genre, offline=args.offline, language=args.language,
@@ -175,7 +215,9 @@ def main():
             except Exception as e:  # noqa: BLE001
                 errors.append(f"Facebook: {e}")
 
-    history.append({"date": dt.date.today().isoformat(), "title": spec["title"], "genre": spec["genre"],
+    history.append({"date": dt.date.today().isoformat(),
+                    "ts": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+                    "title": spec["title"], "genre": spec["genre"],
                     "language": spec["language"], "type": spec["song_type"],
                     "theme": spec["theme"], "engine": song["engine"], "video_id": video_id,
                     "short_id": short_id, "instagram": ig_link})

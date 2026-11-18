@@ -108,6 +108,7 @@ facebook:
   page_name: "Neon Ghost Radio" # ONLY this Page is ever posted to               # posts the reel to the Facebook Page too (token needs pages_manage_posts)
 
 youtube:
+  daily_upload_limit: 6       # default API quota ≈ 6 uploads per Pacific-time day; runs skip when it's used
   privacy: "public"           # public | unlisted | private
   category_id: "10"           # 10 = Music
   made_for_kids: false
