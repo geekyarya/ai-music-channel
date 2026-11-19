@@ -395,5 +395,18 @@
     "video_id": "KseNjOv9d2w",
     "short_id": "T2cPERpLgY0",
     "instagram": null
+  },
+  {
+    "date": "2026-11-19",
+    "ts": "2026-11-19T10:41:55+00:00",
+    "title": "Broken Loop",
+    "genre": "trap",
+    "language": "hinglish",
+    "type": "rap",
+    "theme": "First heartbreak and turning the pain into a dark trap anthem.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "A0S4O2-1XfI",
+    "short_id": "6107Mxc8uU0",
+    "instagram": null
   }
 ]
