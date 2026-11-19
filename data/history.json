@@ -382,5 +382,18 @@
     "video_id": "xdievUqqrRk",
     "short_id": "unuxV8qxukE",
     "instagram": null
+  },
+  {
+    "date": "2026-11-19",
+    "ts": "2026-11-19T05:38:49+00:00",
+    "title": "Ghost Echo",
+    "genre": "hip hop",
+    "language": "en",
+    "type": "rap",
+    "theme": "A rapper confronts the lingering ghost of a memory through beats.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "KseNjOv9d2w",
+    "short_id": "T2cPERpLgY0",
+    "instagram": null
   }
 ]
