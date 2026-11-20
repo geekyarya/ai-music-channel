@@ -447,5 +447,18 @@
     "video_id": "kS1wyoC6uWE",
     "short_id": "QYPSAyF52jk",
     "instagram": null
+  },
+  {
+    "date": "2026-11-20",
+    "ts": "2026-11-20T15:33:01+00:00",
+    "title": "Midnight Circuit",
+    "genre": "trap",
+    "language": "en",
+    "type": "rap",
+    "theme": "A relentless night in the city's neon veins, hustling through endless streets.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "J2dNLvSzSPg",
+    "short_id": "4ZJr1QuCPIs",
+    "instagram": null
   }
 ]
