@@ -421,5 +421,18 @@
     "video_id": "R6rZxqnDp2s",
     "short_id": "L9pimN8f1GY",
     "instagram": null
+  },
+  {
+    "date": "2026-11-20",
+    "ts": "2026-11-20T05:33:19+00:00",
+    "title": "Gravity Groove",
+    "genre": "desi hip hop",
+    "language": "hinglish",
+    "type": "rap",
+    "theme": "Using gravity as a metaphor to break limits and rise higher through rap beats",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "D8GnHm6JtXU",
+    "short_id": "aYy6jtpBDRw",
+    "instagram": null
   }
 ]
