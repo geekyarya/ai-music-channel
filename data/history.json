@@ -434,5 +434,18 @@
     "video_id": "D8GnHm6JtXU",
     "short_id": "aYy6jtpBDRw",
     "instagram": null
+  },
+  {
+    "date": "2026-11-20",
+    "ts": "2026-11-20T10:33:22+00:00",
+    "title": "Hallway Exit",
+    "genre": "drill",
+    "language": "en",
+    "type": "rap",
+    "theme": "Saying goodbye to a hostel crew while stepping into the night grind.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "kS1wyoC6uWE",
+    "short_id": "QYPSAyF52jk",
+    "instagram": null
   }
 ]
