@@ -473,5 +473,18 @@
     "video_id": "bOkhx3S-ZUI",
     "short_id": "62dNF5-1mXI",
     "instagram": null
+  },
+  {
+    "date": "2026-11-21",
+    "ts": "2026-11-21T10:30:14+00:00",
+    "title": "Shadows Echo",
+    "genre": "trap",
+    "language": "en",
+    "type": "rap",
+    "theme": "A betrayed confidant confronts the lies and reclaims power.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "UTR5yTFzyYo",
+    "short_id": "cC-ufqLtauw",
+    "instagram": null
   }
 ]
