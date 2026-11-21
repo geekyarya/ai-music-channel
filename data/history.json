@@ -486,5 +486,18 @@
     "video_id": "UTR5yTFzyYo",
     "short_id": "cC-ufqLtauw",
     "instagram": null
+  },
+  {
+    "date": "2026-11-21",
+    "ts": "2026-11-21T15:31:58+00:00",
+    "title": "Dawn Pulse",
+    "genre": "synthwave",
+    "language": "en",
+    "type": "sung",
+    "theme": "Celebrating the first light of a sunrise festival",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "ovduGDcKXUk",
+    "short_id": "YxQIH4UW4OE",
+    "instagram": "https://www.instagram.com/reel/DgAjtTqAC7W/"
   }
 ]
