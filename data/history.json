@@ -512,5 +512,18 @@
     "video_id": "0RlEmJptDBA",
     "short_id": "yUxpUe0Kknc",
     "instagram": "https://www.instagram.com/reel/DgCEQ4vD7nw/"
+  },
+  {
+    "date": "2026-11-22",
+    "ts": "2026-11-22T10:34:02+00:00",
+    "title": "Rooftop Diwali Glow",
+    "genre": "pop",
+    "language": "hinglish",
+    "type": "sung",
+    "theme": "Celebrating the bright, hopeful feeling of Diwali lights from a rooftop",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "AoF7NUTqj0o",
+    "short_id": "7VLs6pr84GM",
+    "instagram": "https://www.instagram.com/reel/DgCma77DVIQ/"
   }
 ]
