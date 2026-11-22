@@ -525,5 +525,18 @@
     "video_id": "AoF7NUTqj0o",
     "short_id": "7VLs6pr84GM",
     "instagram": "https://www.instagram.com/reel/DgCma77DVIQ/"
+  },
+  {
+    "date": "2026-11-22",
+    "ts": "2026-11-22T16:21:34+00:00",
+    "title": "Faded Frame",
+    "genre": "rock",
+    "language": "en",
+    "type": "sung",
+    "theme": "A nostalgic look at an old photograph that awakens past feelings",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "AJ-RUseE1cg",
+    "short_id": "vfmPpY9sVUM",
+    "instagram": "https://www.instagram.com/reel/DgDOMasCX9_/"
   }
 ]
