@@ -538,5 +538,18 @@
     "video_id": "AJ-RUseE1cg",
     "short_id": "vfmPpY9sVUM",
     "instagram": "https://www.instagram.com/reel/DgDOMasCX9_/"
+  },
+  {
+    "date": "2026-11-23",
+    "ts": "2026-11-23T05:30:00+00:00",
+    "title": "Rainy Raat Groove",
+    "genre": "bollywood dance",
+    "language": "hinglish",
+    "type": "sung",
+    "theme": "A small-town celebration of monsoon evenings with dancing and togetherness.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "ZGuywL_r_ZU",
+    "short_id": "V-JufyQvjk4",
+    "instagram": "https://www.instagram.com/reel/DgEobCBkiOR/"
   }
 ]
