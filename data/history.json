@@ -564,5 +564,18 @@
     "video_id": "v3eBu1Z8N5w",
     "short_id": "-5w30j1jTqQ",
     "instagram": "https://www.instagram.com/reel/DgFQyrUETgB/"
+  },
+  {
+    "date": "2026-11-23",
+    "ts": "2026-11-23T17:59:45+00:00",
+    "title": "Grind Code",
+    "genre": "drill",
+    "language": "en",
+    "type": "rap",
+    "theme": "Relentless daily hustle turning into triumph.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "IdWnHLgrhQw",
+    "short_id": "5bxVjAXPx9A",
+    "instagram": null
   }
 ]
