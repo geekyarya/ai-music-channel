@@ -551,5 +551,18 @@
     "video_id": "ZGuywL_r_ZU",
     "short_id": "V-JufyQvjk4",
     "instagram": "https://www.instagram.com/reel/DgEobCBkiOR/"
+  },
+  {
+    "date": "2026-11-23",
+    "ts": "2026-11-23T11:22:44+00:00",
+    "title": "Neon Pulse",
+    "genre": "trap",
+    "language": "hinglish",
+    "type": "rap",
+    "theme": "A dark trap anthem about riding the underground city's pulse and rising above the night",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "v3eBu1Z8N5w",
+    "short_id": "-5w30j1jTqQ",
+    "instagram": "https://www.instagram.com/reel/DgFQyrUETgB/"
   }
 ]
