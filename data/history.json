@@ -577,5 +577,18 @@
     "video_id": "IdWnHLgrhQw",
     "short_id": "5bxVjAXPx9A",
     "instagram": null
+  },
+  {
+    "date": "2026-11-24",
+    "ts": "2026-11-24T05:55:47+00:00",
+    "title": "Rainy Day Reverie",
+    "genre": "lo-fi",
+    "language": "en",
+    "type": "sung",
+    "theme": "Finding calm and warmth in a rainy evening",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "cx0CQR1GNT8",
+    "short_id": "ZBzQ8H4SNkY",
+    "instagram": null
   }
 ]
