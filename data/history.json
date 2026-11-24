@@ -590,5 +590,18 @@
     "video_id": "cx0CQR1GNT8",
     "short_id": "ZBzQ8H4SNkY",
     "instagram": null
+  },
+  {
+    "date": "2026-11-24",
+    "ts": "2026-11-24T10:30:08+00:00",
+    "title": "Lineage Call",
+    "genre": "hip hop",
+    "language": "en",
+    "type": "rap",
+    "theme": "A son draws strength and wisdom from his mother's voice on the phone",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "t0B2CoI_qz0",
+    "short_id": "F-mi4RPozYs",
+    "instagram": null
   }
 ]
