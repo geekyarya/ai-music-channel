@@ -603,5 +603,18 @@
     "video_id": "t0B2CoI_qz0",
     "short_id": "F-mi4RPozYs",
     "instagram": null
+  },
+  {
+    "date": "2026-11-24",
+    "ts": "2026-11-24T15:26:39+00:00",
+    "title": "Dil Ki Whisper",
+    "genre": "r&b",
+    "language": "hinglish",
+    "type": "sung",
+    "theme": "A yearning heart calling out to a lost love, hoping to reconnect.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "-5dx-ygBo0g",
+    "short_id": "DCl9oQWr7hc",
+    "instagram": null
   }
 ]
