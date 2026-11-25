@@ -629,5 +629,18 @@
     "video_id": "MuOe6auwINM",
     "short_id": "C1jKcwr3V9c",
     "instagram": null
+  },
+  {
+    "date": "2026-11-25",
+    "ts": "2026-11-25T10:33:41+00:00",
+    "title": "Last Train Neon",
+    "genre": "synthwave",
+    "language": "en",
+    "type": "sung",
+    "theme": "Chasing the feeling of catching the last train under city lights",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "yBT4lGWcl9k",
+    "short_id": "3kTbqz0yMrM",
+    "instagram": null
   }
 ]
