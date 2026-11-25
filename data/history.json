@@ -642,5 +642,18 @@
     "video_id": "yBT4lGWcl9k",
     "short_id": "3kTbqz0yMrM",
     "instagram": null
+  },
+  {
+    "date": "2026-11-25",
+    "ts": "2026-11-25T15:08:39+00:00",
+    "title": "Tin Roof Beats",
+    "genre": "lo-fi bollywood",
+    "language": "hinglish",
+    "type": "sung",
+    "theme": "Finding calm and nostalgia while listening to rain on a tin roof",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "6RYSWgS5kW8",
+    "short_id": "iwaHlRMs7Co",
+    "instagram": null
   }
 ]
