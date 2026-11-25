@@ -616,5 +616,18 @@
     "video_id": "-5dx-ygBo0g",
     "short_id": "DCl9oQWr7hc",
     "instagram": null
+  },
+  {
+    "date": "2026-11-25",
+    "ts": "2026-11-25T05:28:14+00:00",
+    "title": "Flash Cipher",
+    "genre": "drill",
+    "language": "en",
+    "type": "rap",
+    "theme": "Uncovering hidden truths from an old photograph through gritty drill beats",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "MuOe6auwINM",
+    "short_id": "C1jKcwr3V9c",
+    "instagram": null
   }
 ]
