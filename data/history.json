@@ -681,5 +681,18 @@
     "video_id": "6CW_MhiMTco",
     "short_id": "QsTJxPoTvL8",
     "instagram": null
+  },
+  {
+    "date": "2026-11-26",
+    "ts": "2026-11-26T15:33:03+00:00",
+    "title": "Midnight Cruise",
+    "genre": "hip hop",
+    "language": "en",
+    "type": "rap",
+    "theme": "Riding the city streets after dark, thoughts racing with the beat",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "aJ4sWfRczdY",
+    "short_id": "Hg9rdyzPu3Q",
+    "instagram": null
   }
 ]
