@@ -668,5 +668,18 @@
     "video_id": "4IWr8DRFwwo",
     "short_id": "p9QAbsPI7HA",
     "instagram": null
+  },
+  {
+    "date": "2026-11-26",
+    "ts": "2026-11-26T10:52:25+00:00",
+    "title": "Hostel Exit",
+    "genre": "hip hop",
+    "language": "en",
+    "type": "rap",
+    "theme": "Saying goodbye to hostel mates while carrying their shared dreams forward.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "6CW_MhiMTco",
+    "short_id": "QsTJxPoTvL8",
+    "instagram": null
   }
 ]
