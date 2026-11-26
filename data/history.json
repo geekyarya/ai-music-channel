@@ -655,5 +655,18 @@
     "video_id": "6RYSWgS5kW8",
     "short_id": "iwaHlRMs7Co",
     "instagram": null
+  },
+  {
+    "date": "2026-11-26",
+    "ts": "2026-11-26T05:32:18+00:00",
+    "title": "Odds Defied",
+    "genre": "trap",
+    "language": "en",
+    "type": "rap",
+    "theme": "Overcoming impossible odds and claiming victory in a dark trap realm.",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "4IWr8DRFwwo",
+    "short_id": "p9QAbsPI7HA",
+    "instagram": null
   }
 ]
