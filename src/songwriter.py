@@ -49,6 +49,7 @@ Song type: {type_rule}
 Genre: {genre}
 Sound palette: {style}
 Avoid these themes (used recently): {recent_themes}
+The title must be NEW: never reuse or closely echo any of these earlier titles: {used_titles}
 Creative seed (use loosely for inspiration): {seed}
 
 Return JSON with exactly these keys:
@@ -140,6 +141,7 @@ def write_song(cfg: dict, history: list[dict], genre_override: str | None = None
     if offline:
         return _scrub(_normalize(_offline_song(genre, lang["code"]), genre, lang), cfg)
     recent_themes = "; ".join(h.get("theme", "") for h in history[-15:]) or "none"
+    used_titles = "; ".join(dict.fromkeys(h["title"] for h in history[-80:] if h.get("title"))) or "none"
     try:
         spec = chat_json(
             cfg["llm"]["providers"],
@@ -147,7 +149,7 @@ def write_song(cfg: dict, history: list[dict], genre_override: str | None = None
             USER_TMPL.format(
                 language=lang["name"], lang_rule=LANG_RULES.get(lang["code"], LANG_RULES["en"]),
                 type_rule=TYPE_RULES[gtype], genre=genre["name"], style=genre["style"],
-                recent_themes=recent_themes, seed=random.choice(SEEDS),
+                recent_themes=recent_themes, used_titles=used_titles, seed=random.choice(SEEDS),
                 styles=" | ".join(f'"{s}"' for s in VISUAL_STYLES),
                 disclosure_rule="" if cfg["channel"].get("disclose_ai") else NO_AI_RULE,
             ),
