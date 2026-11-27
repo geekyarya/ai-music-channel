@@ -720,5 +720,18 @@
     "video_id": "cE5wX5fjrtU",
     "short_id": "I4dj0Nkj8zg",
     "instagram": null
+  },
+  {
+    "date": "2026-11-27",
+    "ts": "2026-11-27T15:28:58+00:00",
+    "title": "Neon Pulse",
+    "genre": "synthwave",
+    "language": "en",
+    "type": "sung",
+    "theme": "Chasing the endless night in a city that never sleeps",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "O7ab6n6lwQw",
+    "short_id": "mNqvwxz7WnY",
+    "instagram": null
   }
 ]
