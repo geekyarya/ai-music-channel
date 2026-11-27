@@ -707,5 +707,18 @@
     "video_id": "LMz7ayjI8qI",
     "short_id": "5bxdNvdgD_k",
     "instagram": null
+  },
+  {
+    "date": "2026-11-27",
+    "ts": "2026-11-27T10:51:53+00:00",
+    "title": "Mixtape Yaadein",
+    "genre": "r&b",
+    "language": "hi",
+    "type": "sung",
+    "theme": "A hidden mixtape sparks nostalgic introspection and a fresh love for self",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "cE5wX5fjrtU",
+    "short_id": "I4dj0Nkj8zg",
+    "instagram": null
   }
 ]
