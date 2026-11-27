@@ -694,5 +694,18 @@
     "video_id": "aJ4sWfRczdY",
     "short_id": "Hg9rdyzPu3Q",
     "instagram": null
+  },
+  {
+    "date": "2026-11-27",
+    "ts": "2026-11-27T05:34:13+00:00",
+    "title": "Neon Dawn",
+    "genre": "edm",
+    "language": "hinglish",
+    "type": "sung",
+    "theme": "A high\u2011energy celebration of sunrise turning night into a limitless party",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "LMz7ayjI8qI",
+    "short_id": "5bxdNvdgD_k",
+    "instagram": null
   }
 ]
