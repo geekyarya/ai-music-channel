@@ -733,5 +733,18 @@
     "video_id": "O7ab6n6lwQw",
     "short_id": "mNqvwxz7WnY",
     "instagram": null
+  },
+  {
+    "date": "2026-11-28",
+    "ts": "2026-11-28T05:31:02+00:00",
+    "title": "Abyssal Tide",
+    "genre": "trap",
+    "language": "en",
+    "type": "rap",
+    "theme": "Exploring an unseen ocean of ambition and danger",
+    "engine": "ACE-Step (Kaggle GPU)",
+    "video_id": "ScNQqW5sRr4",
+    "short_id": "bokEfrcL7u8",
+    "instagram": null
   }
 ]
