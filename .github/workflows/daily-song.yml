@@ -1,10 +1,9 @@
 name: Daily AI Song
 
 on:
-  schedule:
-    # 3 songs a day (each with a Short = 6 YouTube uploads, the daily API limit):
-    # 04:37, 09:37, 14:37 UTC = 10:07 AM, 3:07 PM, 8:07 PM India time
-    - cron: "37 4,9,14 * * *"
+  # Paused: the channel switched to desi-hero videos (hero-video.yml). Uncomment to bring songs back.
+  # schedule:
+  #   - cron: "37 4,9,14 * * *"
   workflow_dispatch:
     inputs:
       language:

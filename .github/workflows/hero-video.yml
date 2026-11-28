@@ -1,0 +1,110 @@
+name: Captain Gamchha Episode
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: "Post to YouTube Shorts / Instagram / Facebook"
+        type: boolean
+        default: false
+      offline:
+        description: "Use the built-in test episode (no LLM)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # commit data/history.json
+  models: read
+
+concurrency:
+  group: hero-video
+  cancel-in-progress: false
+
+jobs:
+  make-and-post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: System packages
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q ffmpeg espeak-ng fonts-dejavu-core
+
+      - name: Fonts
+        continue-on-error: true
+        run: |
+          mkdir -p assets/fonts
+          curl -fsSL -o assets/fonts/Anton-Regular.ttf https://github.com/google/fonts/raw/main/ofl/anton/Anton-Regular.ttf
+          curl -fsSL -o "assets/fonts/Inter.ttf" "https://github.com/google/fonts/raw/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf"
+
+      - name: Python deps
+        run: pip install -r requirements.txt
+
+      - name: Make episode (+ post)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          IN_UPLOAD: ${{ inputs.upload }}
+          IN_OFFLINE: ${{ inputs.offline }}
+        run: |
+          ARGS=()
+          [ "$IN_UPLOAD" != "true" ] && ARGS+=(--no-upload)
+          [ "$IN_OFFLINE" = "true" ] && ARGS+=(--offline)
+          python -u src/hero_main.py "${ARGS[@]}"
+
+      - name: Keep the episode as a build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: episode-${{ github.run_number }}
+          path: |
+            out/*/episode.mp4
+            out/*/episode.json
+            out/*/gpu/*.png
+            out/*/gpu/result.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Commit history
+        if: always() && inputs.upload
+        run: |
+          [ -f data/history.json ] || exit 0
+          git config user.name "ai-music-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp data/history.json /tmp/history.mine.json
+          for i in 1 2 3 4; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            python - <<'PY'
+          import json
+          mine = json.load(open("/tmp/history.mine.json"))[-1]
+          try:
+              hist = json.load(open("data/history.json"))
+          except FileNotFoundError:
+              hist = []
+          if not hist or hist[-1] != mine:
+              hist.append(mine)
+          json.dump(hist, open("data/history.json", "w"), indent=2)
+          PY
+            git add data/history.json
+            git diff --cached --quiet && exit 0
+            git commit -q -m "🦸 $(jq -r '.[-1].title' data/history.json) [skip ci]"
+            git push -q origin HEAD:main && exit 0
+            sleep $((i * 5))
+          done
+          exit 1

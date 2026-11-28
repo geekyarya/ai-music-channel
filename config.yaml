@@ -116,3 +116,32 @@ youtube:
   ai_tags: ["ai music", "ai generated song", "ai song"]        # added only when disclose_ai is true
   # Optional line added to every description, e.g. "Real voice or AI? 🤔 Comment your guess 👇"
   engagement_line: ""
+
+# ─── Desi hero shorts (hero_main.py / hero-video.yml) ───────────────────────────
+# An ORIGINAL character (no Batman/DC/Marvel): funny village superhero mini-episodes, 30-45 s, vertical.
+hero:
+  name: "Captain Gamchha"
+  series_tag: "#CaptainGamchha"
+  # Pasted into every image prompt so the hero looks the same in every shot.
+  look: >-
+    Captain Gamchha, a muscular Indian village man in his thirties with a thick curled black moustache,
+    black aviator sunglasses, a white vest over a mustard-yellow kurta with a golden lightning-bolt badge
+    on the chest, a bright red checked gamchha towel tied around his neck as a flowing superhero cape,
+    khaki dhoti and brown kolhapuri sandals
+  look_short: "Captain Gamchha, muscular Indian man, thick curled moustache, black aviator sunglasses, mustard-yellow kurta with gold lightning badge, red checked towel cape, khaki dhoti"
+  setting_short: "Indian village, mud houses, mustard fields"
+  cast:
+    - "Toofan: his ride, a huge black water buffalo with golden painted horns, a red saddle cloth and a brass bell (the 'Toofan Express')"
+    - "Chhotu: his sidekick, a small white goat wearing tiny round goggles"
+    - "Lala Laalchi: the recurring villain, a fat greedy moneylender with a thin moustache, gold chains and a shiny umbrella"
+    - "Villagers of Rampur: chai-stall owner Pappu, Dadi with a walking stick, kids, the panchayat"
+  setting: "Rampur, a village in Uttar Pradesh: mud-brick houses, mustard fields, a hand pump, a chai stall, tractors, a banyan tree"
+  style: "3D animated movie still, cinematic lighting, vibrant colors, expressive faces, highly detailed"
+  negative: "blurry, deformed, extra limbs, bad hands, text, watermark, logo, batman, bat symbol, mask, low quality"
+  shots: 7                     # images/clips per episode (≈5 s each)
+  catchphrase: "Gaon ki raksha, gamchhe ki kasam!"
+  kaggle_slug: "ngr-hero"
+  video_model: true            # animate shots with LTX-Video on Kaggle (falls back to camera moves if it fails)
+  youtube_category_id: "23"    # Comedy
+  default_tags: ["captain gamchha", "desi superhero", "desi comedy", "funny video", "village comedy", "shorts"]
+  hashtags: ["#CaptainGamchha", "#desisuperhero", "#desicomedy", "#funny", "#reels", "#shorts"]
