@@ -158,16 +158,17 @@ if P.get("video", True):
             arr = np.stack([np.asarray(f, dtype=np.float32) for f in frames])
             ok = np.isfinite(arr).all() and arr.std() > 4 and arr.mean() > 8
             if ok:  # clips often melt part-way: keep only the sharp start (frame 0 is the crisp input picture)
-                def sharp(a):
+                def sharp(a):  # strength of the sharpest edges; tolerant of camera push-ins, drops when things melt
                     g = a.mean(axis=2)
-                    return float(np.var(g[1:-1, 1:-1] * 4 - g[:-2, 1:-1] - g[2:, 1:-1] - g[1:-1, :-2] - g[1:-1, 2:]))
+                    m = np.hypot(np.abs(np.diff(g, axis=1))[:-1], np.abs(np.diff(g, axis=0))[:, :-1])
+                    return float(np.percentile(m, 99))
                 s0 = sharp(arr[min(3, len(arr) - 1)]) + 1e-6
-                limit = float(P.get("min_sharpness", 0.7))
+                limit = float(P.get("min_sharpness", 0.75))
                 cut = next((k for k in range(4, len(arr)) if sharp(arr[k]) / s0 < limit), len(arr))
                 log(f"clip {i + 1}: sharp for {cut}/{len(arr)} frames")
                 if cut < len(arr):
                     export_to_video(frames, os.path.join(OUT, f"rejected_{i}.mp4"), fps=24)  # full clip, for review
-                    if cut < int(P.get("min_frames", 33)):
+                    if cut < int(P.get("min_frames", 24)):
                         RESULT["notes"].append(f"shot {i}: clip went blurry after {cut} frames, using the still")
                         i += 1
                         continue
