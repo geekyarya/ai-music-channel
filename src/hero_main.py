@@ -66,7 +66,7 @@ def make_visuals(spec: dict, cfg: dict, out: str) -> dict:
         shots.append({"p1": p1, "p2": p2, "vp": hero_story.video_prompt(s, cfg), "hero": hero_story.has_hero(s),
                       "seed": random.randint(1, 2**31 - 1)})
     params = {"shots": shots, "negative": h["negative"], "video": bool(h.get("video_model", True)),
-              "image_size": [768, 1344], "video_size": [480, 832], "num_frames": 97,
+              "image_size": [768, 1344], "video_size": [480, 832], "num_frames": 65,
               "video_steps": int(h.get("video_steps", 30)), "video_budget_minutes": h.get("video_budget_minutes", 85)}
     ref_path = FACE if os.path.exists(FACE) else REF
     if os.path.exists(ref_path):

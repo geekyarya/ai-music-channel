@@ -100,15 +100,23 @@ if P.get("mode") == "ref":
     P["video"] = False
 if P.get("video", True):
     try:
-        from diffusers import LTXImageToVideoPipeline
         from diffusers.utils import export_to_video
         from transformers import T5EncoderModel
 
-        repo = P.get("ltx_repo", "Lightricks/LTX-Video")
+        repo = P.get("ltx_repo", "Lightricks/LTX-Video-0.9.5")
+        try:  # 0.9.5+ animates much more cleanly; it takes the picture as a "condition" at frame 0
+            from diffusers import LTXConditionPipeline as VPipe
+            from diffusers.pipelines.ltx.pipeline_ltx_condition import LTXVideoCondition
+        except Exception as e:  # noqa: BLE001
+            RESULT["notes"].append(f"LTX 0.9.5 unavailable ({e}); using 0.9.0")
+            from diffusers import LTXImageToVideoPipeline as VPipe
+            repo, LTXVideoCondition = "Lightricks/LTX-Video", None
+        log(f"video model: {repo}")
+        RESULT["ltx_repo"] = repo
         # T5-XXL overflows in float16 (T4 has no fast bfloat16), so encode all prompts on the CPU in bfloat16.
         log("encoding video prompts…")
         te = T5EncoderModel.from_pretrained(repo, subfolder="text_encoder", torch_dtype=torch.bfloat16)
-        vpipe = LTXImageToVideoPipeline.from_pretrained(repo, text_encoder=te, torch_dtype=torch.float16)
+        vpipe = VPipe.from_pretrained(repo, text_encoder=te, torch_dtype=torch.float16)
         cpu = torch.device("cpu")
         embeds = []
         with torch.no_grad():
@@ -139,27 +147,32 @@ if P.get("video", True):
             img = Image.open(os.path.join(OUT, f"shot_{i}.png")).convert("RGB").resize((VW, VH), Image.LANCZOS)
             pe, pm, ne, nm = (x.to("cuda", dtype) if x.is_floating_point() else x.to("cuda") for x in embeds[i])
             with torch.no_grad():
-                frames = vpipe(image=img, prompt_embeds=pe, prompt_attention_mask=pm, negative_prompt_embeds=ne,
+                cond = ({"conditions": [LTXVideoCondition(image=img, frame_index=0)], "image_cond_noise_scale": 0.025}
+                        if LTXVideoCondition else {"image": img})
+                frames = vpipe(**cond, prompt_embeds=pe, prompt_attention_mask=pm, negative_prompt_embeds=ne,
                                negative_prompt_attention_mask=nm, width=VW, height=VH,
-                               num_frames=int(P.get("num_frames", 97)),
+                               num_frames=int(P.get("num_frames", 65)),
                                num_inference_steps=int(P.get("video_steps", 30)), guidance_scale=3.0,
-                               decode_timestep=0.03, decode_noise_scale=0.025,
+                               decode_timestep=0.05, decode_noise_scale=0.025,
                                generator=torch.Generator("cuda").manual_seed(int(shots[i]["seed"]))).frames[0]
             arr = np.stack([np.asarray(f, dtype=np.float32) for f in frames])
             ok = np.isfinite(arr).all() and arr.std() > 4 and arr.mean() > 8
-            if ok:  # reject clips that melt into mush: sharpness must stay near the first frame's
+            if ok:  # clips often melt part-way: keep only the sharp start (frame 0 is the crisp input picture)
                 def sharp(a):
                     g = a.mean(axis=2)
                     return float(np.var(g[1:-1, 1:-1] * 4 - g[:-2, 1:-1] - g[2:, 1:-1] - g[1:-1, :-2] - g[1:-1, 2:]))
-                # frame 0 is the crisp input picture; compare against an early generated frame instead
                 s0 = sharp(arr[min(3, len(arr) - 1)]) + 1e-6
-                worst = min(sharp(arr[k]) for k in range(len(arr) // 4, len(arr), max(1, len(arr) // 8))) / s0
-                log(f"clip {i + 1}: sharpness kept {worst:.0%}")
-                if worst < float(P.get("min_sharpness", 0.3)):
-                    export_to_video(frames, os.path.join(OUT, f"rejected_{i}.mp4"), fps=24)  # kept for review
-                    RESULT["notes"].append(f"shot {i}: clip went blurry ({worst:.0%}), using the still")
-                    i += 1
-                    continue
+                limit = float(P.get("min_sharpness", 0.7))
+                cut = next((k for k in range(4, len(arr)) if sharp(arr[k]) / s0 < limit), len(arr))
+                log(f"clip {i + 1}: sharp for {cut}/{len(arr)} frames")
+                if cut < len(arr):
+                    export_to_video(frames, os.path.join(OUT, f"rejected_{i}.mp4"), fps=24)  # full clip, for review
+                    if cut < int(P.get("min_frames", 33)):
+                        RESULT["notes"].append(f"shot {i}: clip went blurry after {cut} frames, using the still")
+                        i += 1
+                        continue
+                    RESULT["notes"].append(f"shot {i}: trimmed to the first {cut} sharp frames")
+                    frames = frames[:cut]
             if not ok:
                 if dtype == torch.float16:
                     log("float16 produced a bad clip; switching LTX to float32")
