@@ -124,11 +124,11 @@ hero:
   series_tag: "#CaptainGamchha"
   # Pasted into every image prompt so the hero looks the same in every shot.
   look: >-
-    Captain Gamchha, a muscular Indian village man in his thirties with a thick curled black moustache,
-    black aviator sunglasses, a white vest over a mustard-yellow kurta with a golden lightning-bolt badge
-    on the chest, a bright red checked gamchha towel tied around his neck as a flowing superhero cape,
-    khaki dhoti and brown kolhapuri sandals
-  look_short: "Captain Gamchha wearing black aviator sunglasses, muscular Indian man, thick curled moustache, mustard-yellow kurta with gold lightning badge, red checked towel cape, khaki dhoti"
+    Captain Gamchha, a muscular Indian village strongman in his thirties with a thick curled black moustache,
+    slicked-back black hair and a red tilak on his forehead, wearing a white wrap shirt with a white sash,
+    a red-and-orange checked gamchha towel draped over both shoulders like a superhero cape,
+    a loose mustard-yellow dhoti and brown leather sandals
+  look_short: "Captain Gamchha, muscular Indian village strongman, thick curled black moustache, red tilak, white wrap shirt, red checked gamchha over both shoulders, mustard-yellow dhoti"
   setting_short: "Indian village, mud houses, mustard fields"
   cast:
     - "Toofan: his ride, a huge black water buffalo with golden painted horns, a red saddle cloth and a brass bell (the 'Toofan Express')"
