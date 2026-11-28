@@ -68,7 +68,14 @@ def make_visuals(spec: dict, cfg: dict, out: str) -> dict:
               "image_size": [768, 1344], "video_size": [480, 832], "num_frames": 97,
               "video_steps": int(h.get("video_steps", 30)), "video_budget_minutes": h.get("video_budget_minutes", 85)}
     if os.path.exists(REF):
-        params["ref_b64"] = base64.b64encode(open(REF, "rb").read()).decode()
+        # Kaggle rejects big scripts, so embed a small JPEG (IP-Adapter only sees 224x224 anyway)
+        import io
+        from PIL import Image
+        im = Image.open(REF).convert("RGB")
+        im.thumbnail((448, 768))
+        buf = io.BytesIO()
+        im.save(buf, "JPEG", quality=88)
+        params["ref_b64"] = base64.b64encode(buf.getvalue()).decode()
         params["ref_scale"] = h.get("ref_scale", 0.6)
     src = os.path.join(out, "gpu")
     kaggle_run.run(os.path.join(os.path.dirname(__file__), "hero_kernel.py"), params, h.get("kaggle_slug", "ngr-hero"),
