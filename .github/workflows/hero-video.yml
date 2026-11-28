@@ -84,6 +84,7 @@ jobs:
             out/*/episode.mp4
             out/*/episode.json
             out/*/gpu/*.png
+            out/*/gpu/*.mp4
             out/*/gpu/result.json
             out/*/reference_sheet.jpg
           retention-days: 7

@@ -71,7 +71,8 @@ if P.get("ref_b64"):
     try:
         # IP-Adapter Plus copies the reference's look (face, shades, costume) into shots where the hero appears.
         pipe.load_ip_adapter("h94/IP-Adapter", subfolder="sdxl_models",
-                             weight_name="ip-adapter-plus_sdxl_vit-h.safetensors")
+                             weight_name=("ip-adapter-plus-face_sdxl_vit-h.safetensors" if P.get("ref_kind") == "face"
+                                          else "ip-adapter-plus_sdxl_vit-h.safetensors"))
         ref = Image.open(io.BytesIO(base64.b64decode(P["ref_b64"]))).convert("RGB")
         log("using the hero reference image (IP-Adapter)")
     except Exception as e:  # noqa: BLE001
@@ -150,10 +151,12 @@ if P.get("video", True):
                 def sharp(a):
                     g = a.mean(axis=2)
                     return float(np.var(g[1:-1, 1:-1] * 4 - g[:-2, 1:-1] - g[2:, 1:-1] - g[1:-1, :-2] - g[1:-1, 2:]))
-                s0 = sharp(arr[0]) + 1e-6
+                # frame 0 is the crisp input picture; compare against an early generated frame instead
+                s0 = sharp(arr[min(3, len(arr) - 1)]) + 1e-6
                 worst = min(sharp(arr[k]) for k in range(len(arr) // 4, len(arr), max(1, len(arr) // 8))) / s0
                 log(f"clip {i + 1}: sharpness kept {worst:.0%}")
-                if worst < float(P.get("min_sharpness", 0.45)):
+                if worst < float(P.get("min_sharpness", 0.3)):
+                    export_to_video(frames, os.path.join(OUT, f"rejected_{i}.mp4"), fps=24)  # kept for review
                     RESULT["notes"].append(f"shot {i}: clip went blurry ({worst:.0%}), using the still")
                     i += 1
                     continue

@@ -23,6 +23,7 @@ import youtube  # noqa: E402
 from main import HISTORY, ROOT, _since, load_history  # noqa: E402
 
 REF = os.path.join(ROOT, "assets", "hero_ref.png")
+FACE = os.path.join(ROOT, "assets", "hero_face.png")  # head crop: IP-Adapter face copies the face, not the pose
 
 TEST_EPISODE = {
     "title": "Toofan Express Ki Pehli Udaan",
@@ -67,16 +68,18 @@ def make_visuals(spec: dict, cfg: dict, out: str) -> dict:
     params = {"shots": shots, "negative": h["negative"], "video": bool(h.get("video_model", True)),
               "image_size": [768, 1344], "video_size": [480, 832], "num_frames": 97,
               "video_steps": int(h.get("video_steps", 30)), "video_budget_minutes": h.get("video_budget_minutes", 85)}
-    if os.path.exists(REF):
+    ref_path = FACE if os.path.exists(FACE) else REF
+    if os.path.exists(ref_path):
         # Kaggle rejects big scripts, so embed a small JPEG (IP-Adapter only sees 224x224 anyway)
         import io
         from PIL import Image
-        im = Image.open(REF).convert("RGB")
+        im = Image.open(ref_path).convert("RGB")
         im.thumbnail((448, 768))
         buf = io.BytesIO()
         im.save(buf, "JPEG", quality=88)
         params["ref_b64"] = base64.b64encode(buf.getvalue()).decode()
         params["ref_scale"] = h.get("ref_scale", 0.6)
+        params["ref_kind"] = "face" if ref_path == FACE else "plus"
     src = os.path.join(out, "gpu")
     kaggle_run.run(os.path.join(os.path.dirname(__file__), "hero_kernel.py"), params, h.get("kaggle_slug", "ngr-hero"),
                    src, timeout_minutes=h.get("kaggle_timeout_minutes", 150))

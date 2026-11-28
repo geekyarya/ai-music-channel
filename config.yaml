@@ -128,7 +128,7 @@ hero:
     slicked-back black hair and a red tilak on his forehead, wearing a white wrap shirt with a white sash,
     a red-and-orange checked gamchha towel draped over both shoulders like a superhero cape,
     a loose mustard-yellow dhoti and brown leather sandals
-  look_short: "Captain Gamchha, muscular Indian village strongman, thick curled black moustache, red tilak, white wrap shirt, red checked gamchha over both shoulders, mustard-yellow dhoti"
+  look_short: "Captain Gamchha, muscular Indian village strongman, thick curled black moustache, no beard, bare head, red tilak, white wrap shirt, red checked gamchha over both shoulders, mustard-yellow dhoti"
   setting_short: "Indian village, mud houses, mustard fields"
   cast:
     - "Toofan: his ride, a huge black water buffalo with golden painted horns, a red saddle cloth and a brass bell (the 'Toofan Express')"
@@ -137,7 +137,7 @@ hero:
     - "Villagers of Rampur: chai-stall owner Pappu, Dadi with a walking stick, kids, the panchayat"
   setting: "Rampur, a village in Uttar Pradesh: mud-brick houses, mustard fields, a hand pump, a chai stall, tractors, a banyan tree"
   style: "3D animated movie still, cinematic lighting, vibrant colors, expressive faces, highly detailed"
-  negative: "blurry, deformed, extra limbs, bad hands, text, watermark, logo, batman, bat symbol, mask, low quality"
+  negative: "blurry, deformed, extra limbs, bad hands, text, watermark, logo, batman, bat symbol, mask, low quality, split screen, collage, multiple panels, border"
   shots: 7                     # images/clips per episode (≈5 s each)
   catchphrase: "Gaon ki raksha, gamchhe ki kasam!"
   kaggle_slug: "ngr-hero"
