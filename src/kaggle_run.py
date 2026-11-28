@@ -28,7 +28,8 @@ def _kaggle(*args, check=True) -> str:
 
 
 def run(script_path: str, params: dict, slug: str, out_dir: str, accelerator: str = "NvidiaTeslaT4",
-        timeout_minutes: float = 150, requeue_after_minutes: float = 45, max_requeues: int = 1) -> str:
+        timeout_minutes: float = 150, requeue_after_minutes: float = 45, max_requeues: int = 1,
+        fallback_accelerator: str | None = "NvidiaTeslaP100") -> str:
     """Returns the directory holding the kernel's output files. Raises if the kernel never completed."""
     if not have_credentials():
         raise RuntimeError("KAGGLE_USERNAME / KAGGLE_KEY not set")
@@ -38,10 +39,14 @@ def run(script_path: str, params: dict, slug: str, out_dir: str, accelerator: st
     work = tempfile.mkdtemp(prefix="kaggle_")
     with open(os.path.join(work, "run.py"), "w") as fh:
         fh.write(code)
-    with open(os.path.join(work, "kernel-metadata.json"), "w") as fh:
-        json.dump({"id": kid, "title": slug, "code_file": "run.py", "language": "python", "kernel_type": "script",
-                   "is_private": True, "enable_gpu": True, "machine_shape": accelerator, "enable_internet": True,
-                   "dataset_sources": [], "competition_sources": [], "kernel_sources": []}, fh)
+
+    def write_meta(acc):
+        with open(os.path.join(work, "kernel-metadata.json"), "w") as fh:
+            json.dump({"id": kid, "title": slug, "code_file": "run.py", "language": "python", "kernel_type": "script",
+                       "is_private": True, "enable_gpu": True, "machine_shape": acc, "enable_internet": True,
+                       "dataset_sources": [], "competition_sources": [], "kernel_sources": []}, fh)
+
+    write_meta(accelerator)
     quota = _kaggle("quota", check=False).strip()
     print("   Kaggle quota: " + " | ".join(l.strip() for l in quota.splitlines() if l.strip())[:300])
     timeout_s = int(timeout_minutes * 60)
@@ -83,7 +88,10 @@ def run(script_path: str, params: dict, slug: str, out_dir: str, accelerator: st
         if "queued" in status:
             if time.time() - queued_since > requeue_after_minutes * 60 and repushed < max_requeues:
                 repushed += 1
-                print(f"   still queued after {requeue_after_minutes:.0f} min; clearing and pushing again")
+                if fallback_accelerator and fallback_accelerator != accelerator:
+                    accelerator = fallback_accelerator  # the T4 queue is jammed; try the other free GPU
+                    write_meta(accelerator)
+                print(f"   still queued after {requeue_after_minutes:.0f} min; pushing again on {accelerator}")
                 clear()
                 push()
                 queued_since = time.time()
