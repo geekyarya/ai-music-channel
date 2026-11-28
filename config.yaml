@@ -128,11 +128,11 @@ hero:
     black aviator sunglasses, a white vest over a mustard-yellow kurta with a golden lightning-bolt badge
     on the chest, a bright red checked gamchha towel tied around his neck as a flowing superhero cape,
     khaki dhoti and brown kolhapuri sandals
-  look_short: "Captain Gamchha, muscular Indian man, thick curled moustache, black aviator sunglasses, mustard-yellow kurta with gold lightning badge, red checked towel cape, khaki dhoti"
+  look_short: "Captain Gamchha wearing black aviator sunglasses, muscular Indian man, thick curled moustache, mustard-yellow kurta with gold lightning badge, red checked towel cape, khaki dhoti"
   setting_short: "Indian village, mud houses, mustard fields"
   cast:
     - "Toofan: his ride, a huge black water buffalo with golden painted horns, a red saddle cloth and a brass bell (the 'Toofan Express')"
-    - "Chhotu: his sidekick, a small white goat wearing tiny round goggles"
+    - "Chhotu: his sidekick, a small white baby goat (a goat, not a cow) with small horns and a beard, wearing tiny round goggles"
     - "Lala Laalchi: the recurring villain, a fat greedy moneylender with a thin moustache, gold chains and a shiny umbrella"
     - "Villagers of Rampur: chai-stall owner Pappu, Dadi with a walking stick, kids, the panchayat"
   setting: "Rampur, a village in Uttar Pradesh: mud-brick houses, mustard fields, a hand pump, a chai stall, tractors, a banyan tree"

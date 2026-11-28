@@ -59,14 +59,19 @@ def free():
 from diffusers import AutoencoderKL, StableDiffusionXLPipeline  # noqa: E402
 
 vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
+ref, enc = None, None
+if P.get("ref_b64"):
+    from transformers import CLIPVisionModelWithProjection
+    enc = CLIPVisionModelWithProjection.from_pretrained("h94/IP-Adapter", subfolder="models/image_encoder",
+                                                        torch_dtype=torch.float16)
 pipe = StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", vae=vae,
-                                                 torch_dtype=torch.float16, variant="fp16",
+                                                 image_encoder=enc, torch_dtype=torch.float16, variant="fp16",
                                                  use_safetensors=True).to("cuda")
-ref = None
 if P.get("ref_b64"):
     try:
-        pipe.load_ip_adapter("h94/IP-Adapter", subfolder="sdxl_models", weight_name="ip-adapter_sdxl.safetensors")
-        pipe.set_ip_adapter_scale(float(P.get("ref_scale", 0.4)))
+        # IP-Adapter Plus copies the reference's look (face, shades, costume) into shots where the hero appears.
+        pipe.load_ip_adapter("h94/IP-Adapter", subfolder="sdxl_models",
+                             weight_name="ip-adapter-plus_sdxl_vit-h.safetensors")
         ref = Image.open(io.BytesIO(base64.b64decode(P["ref_b64"]))).convert("RGB")
         log("using the hero reference image (IP-Adapter)")
     except Exception as e:  # noqa: BLE001
@@ -74,7 +79,10 @@ if P.get("ref_b64"):
         log(f"IP-Adapter unavailable ({e}); continuing with text only")
 W, H = P.get("image_size", [768, 1344])
 for i, s in enumerate(shots):
-    kw = {"ip_adapter_image": ref} if ref is not None else {}
+    kw = {}
+    if ref is not None:
+        pipe.set_ip_adapter_scale(float(P.get("ref_scale", 0.6)) if s.get("hero") else 0.0)
+        kw = {"ip_adapter_image": ref}
     img = pipe(prompt=s["p1"], prompt_2=s["p2"], negative_prompt=P["negative"], width=W, height=H,
                num_inference_steps=int(P.get("image_steps", 30)), guidance_scale=6.5,
                generator=torch.Generator("cuda").manual_seed(int(s["seed"])), **kw).images[0]
@@ -87,6 +95,8 @@ free()
 
 # ─── 2. motion with LTX-Video ─────────────────────────────────────────────────
 budget = float(P.get("video_budget_minutes", 80)) * 60
+if P.get("mode") == "ref":
+    P["video"] = False
 if P.get("video", True):
     try:
         from diffusers import LTXImageToVideoPipeline
@@ -136,6 +146,17 @@ if P.get("video", True):
                                generator=torch.Generator("cuda").manual_seed(int(shots[i]["seed"]))).frames[0]
             arr = np.stack([np.asarray(f, dtype=np.float32) for f in frames])
             ok = np.isfinite(arr).all() and arr.std() > 4 and arr.mean() > 8
+            if ok:  # reject clips that melt into mush: sharpness must stay near the first frame's
+                def sharp(a):
+                    g = a.mean(axis=2)
+                    return float(np.var(g[1:-1, 1:-1] * 4 - g[:-2, 1:-1] - g[2:, 1:-1] - g[1:-1, :-2] - g[1:-1, 2:]))
+                s0 = sharp(arr[0]) + 1e-6
+                worst = min(sharp(arr[k]) for k in range(len(arr) // 4, len(arr), max(1, len(arr) // 8))) / s0
+                log(f"clip {i + 1}: sharpness kept {worst:.0%}")
+                if worst < float(P.get("min_sharpness", 0.45)):
+                    RESULT["notes"].append(f"shot {i}: clip went blurry ({worst:.0%}), using the still")
+                    i += 1
+                    continue
             if not ok:
                 if dtype == torch.float16:
                     log("float16 produced a bad clip; switching LTX to float32")

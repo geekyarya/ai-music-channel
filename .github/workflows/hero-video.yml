@@ -11,6 +11,11 @@ on:
         description: "Use the built-in test episode (no LLM)"
         type: boolean
         default: false
+      mode:
+        description: "episode, or reference = draw candidate character pictures"
+        type: choice
+        options: ["episode", "reference"]
+        default: "episode"
 
 permissions:
   contents: write   # commit data/history.json
@@ -62,10 +67,12 @@ jobs:
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           IN_UPLOAD: ${{ inputs.upload }}
           IN_OFFLINE: ${{ inputs.offline }}
+          IN_MODE: ${{ inputs.mode }}
         run: |
           ARGS=()
           [ "$IN_UPLOAD" != "true" ] && ARGS+=(--no-upload)
           [ "$IN_OFFLINE" = "true" ] && ARGS+=(--offline)
+          [ "$IN_MODE" = "reference" ] && ARGS+=(--reference)
           python -u src/hero_main.py "${ARGS[@]}"
 
       - name: Keep the episode as a build artifact
@@ -78,6 +85,7 @@ jobs:
             out/*/episode.json
             out/*/gpu/*.png
             out/*/gpu/result.json
+            out/*/reference_sheet.jpg
           retention-days: 7
           if-no-files-found: ignore
 

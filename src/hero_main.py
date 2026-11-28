@@ -62,14 +62,14 @@ def make_visuals(spec: dict, cfg: dict, out: str) -> dict:
     shots = []
     for s in spec["shots"]:
         p1, p2 = hero_story.image_prompts(s, cfg)
-        shots.append({"p1": p1, "p2": p2, "vp": hero_story.video_prompt(s, cfg),
+        shots.append({"p1": p1, "p2": p2, "vp": hero_story.video_prompt(s, cfg), "hero": hero_story.has_hero(s),
                       "seed": random.randint(1, 2**31 - 1)})
     params = {"shots": shots, "negative": h["negative"], "video": bool(h.get("video_model", True)),
               "image_size": [768, 1344], "video_size": [480, 832], "num_frames": 97,
               "video_steps": int(h.get("video_steps", 30)), "video_budget_minutes": h.get("video_budget_minutes", 85)}
     if os.path.exists(REF):
         params["ref_b64"] = base64.b64encode(open(REF, "rb").read()).decode()
-        params["ref_scale"] = h.get("ref_scale", 0.4)
+        params["ref_scale"] = h.get("ref_scale", 0.6)
     src = os.path.join(out, "gpu")
     kaggle_run.run(os.path.join(os.path.dirname(__file__), "hero_kernel.py"), params, h.get("kaggle_slug", "ngr-hero"),
                    src, timeout_minutes=h.get("kaggle_timeout_minutes", 150))
@@ -94,6 +94,43 @@ def fake_visuals(spec: dict, out: str) -> dict:
     return {"dir": src, "result": {}}
 
 
+def make_references(cfg: dict, out: str, n: int = 6) -> None:
+    """Draw candidate model sheets for the cast; the chosen hero picture becomes assets/hero_ref.png."""
+    h = cfg["hero"]
+    style = h["style"]
+    sheets = [("hero", f"full body character design of {h['look_short']}, standing heroically with hands on hips, "
+                       f"front view, centered, whole body visible, simple light village background, {style}",
+               h["look"])] * n
+    sheets += [("toofan", "full body character design of Toofan, a huge friendly black water buffalo with golden "
+                          f"painted horns, red saddle cloth and a brass bell, side view, centered, {style}",
+                h["cast"][0])] * 2
+    sheets += [("chhotu", "full body character design of Chhotu, a small cute white baby goat with tiny horns and "
+                          f"a little beard wearing tiny round goggles, centered, {style}", h["cast"][1])] * 2
+    shots = [{"p1": p1, "p2": f"{p2}, {style}", "vp": "", "hero": False, "seed": random.randint(1, 2**31 - 1)}
+             for _, p1, p2 in sheets]
+    src = os.path.join(out, "gpu")
+    kaggle_run.run(os.path.join(os.path.dirname(__file__), "hero_kernel.py"),
+                   {"mode": "ref", "shots": shots, "negative": h["negative"] + ", cropped, cut off",
+                    "image_size": [896, 1152], "image_steps": 35}, h.get("kaggle_slug", "ngr-hero"), src,
+                   timeout_minutes=90)
+    from PIL import Image, ImageDraw
+    from video import font
+    tiles = []
+    for i, (kind, _, _) in enumerate(sheets):
+        p = os.path.join(src, f"shot_{i}.png")
+        if os.path.exists(p):
+            im = Image.open(p).convert("RGB").resize((448, 576))
+            ImageDraw.Draw(im).text((14, 8), f"{kind} {i + 1}", font=font("title", 44), fill=(255, 230, 0),
+                                    stroke_width=4, stroke_fill=(0, 0, 0))
+            tiles.append(im)
+    cols = 5
+    sheet = Image.new("RGB", (448 * cols, 576 * ((len(tiles) + cols - 1) // cols)), (20, 20, 20))
+    for k, im in enumerate(tiles):
+        sheet.paste(im, ((k % cols) * 448, (k // cols) * 576))
+    sheet.save(os.path.join(out, "reference_sheet.jpg"), quality=90)
+    print(f"   reference sheet: {len(tiles)} pictures → {out}/reference_sheet.jpg")
+
+
 def metadata(spec: dict, cfg: dict) -> tuple[str, str, list[str], str]:
     h = cfg["hero"]
     title = f"{spec['title']} | {h['name']} Ep {spec['episode']} #shorts"[:100]
@@ -112,8 +149,13 @@ def main():
     ap.add_argument("--no-upload", action="store_true")
     ap.add_argument("--offline", action="store_true", help="built-in test episode, no LLM")
     ap.add_argument("--no-gpu", action="store_true", help="placeholder images instead of Kaggle (local test)")
+    ap.add_argument("--reference", action="store_true", help="draw candidate character pictures, nothing else")
     args = ap.parse_args()
     cfg = yaml.safe_load(open(os.path.join(ROOT, "config.yaml")))
+    if args.reference:
+        out = os.path.join(ROOT, "out", "reference")
+        make_references(cfg, out)
+        return
     history = load_history()
 
     if not args.no_upload and uploads_today(history) >= int(cfg["youtube"].get("daily_upload_limit", 6)):

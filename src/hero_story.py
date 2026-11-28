@@ -37,7 +37,11 @@ Make exactly {shots} shots, each about 5 seconds. Return JSON:
   "description": "2 sentence YouTube/Instagram description in Hinglish, ending with a question to make people comment",
   "hashtags": ["#tag", ...] (5-7, no #ai)
 }}
-Shot 1 must hook instantly (problem or crazy situation). The last shot ends with a punchline."""
+Shot 1 must hook instantly (problem or crazy situation). The last shot ends with a punchline.
+Visual rules (the video AI is simple): at most 2 characters per shot, name every character in "visual"
+(e.g. "Captain Gamchha", "Toofan the buffalo", "Chhotu the goat"); show Captain Gamchha in at least 4 shots.
+"motion" must be ONE simple, slow movement (walking, turning the head, smiling, cape fluttering, camera slowly
+pushing in). NO crowds, dust storms, explosions, water sprays, fast spinning or flying objects."""
 
 SEEDS = [
     "the village hand pump stops working before a wedding", "a monkey steals Dadi's spectacles",
@@ -110,6 +114,10 @@ def image_prompts(shot: dict, cfg: dict) -> tuple[str, str]:
     style = h["style"]
     chars = _characters(shot, cfg)
     return f"{shot['visual']}, {style}", ", ".join(chars + [h["setting_short"], style])
+
+
+def has_hero(shot: dict) -> bool:
+    return bool(re.search(r"gamchha|captain", shot["visual"], re.I))
 
 
 def video_prompt(shot: dict, cfg: dict) -> str:
